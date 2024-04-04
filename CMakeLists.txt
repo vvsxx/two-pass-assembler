@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.27)
+project(assembler C)
+
+set(CMAKE_C_STANDARD 11)
+
+add_executable(assembler main.c
+        header.h
+        preprocessor.c
+        list.c
+        firstPass.c
+        functions.c
+        tables.c
+        structs.h
+        secondPass.c
+        typedef.h
+        sentence.c
+)
