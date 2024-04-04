@@ -13,6 +13,7 @@ typedef enum {
 typedef enum {
     COMMENT,
     EMPTY,
+    DEFINE,
     DIRECTIVE,
     ENTRY,
     EXTERN,

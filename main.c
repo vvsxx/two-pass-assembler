@@ -64,6 +64,8 @@ void printError(int errorCode, int line){
             fprintf(stdout,"Missing comma in line %d\n", line); break;
         case REG_DOES_NOT_EXIST:
             fprintf(stdout,"Register does not exist in line %d\n", line); break;
+        case UNDEFINED_ENTRY:
+            fprintf(stdout,"Undefined entry\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

@@ -3,7 +3,7 @@
 
 list *labelLine (int *DC, int *IC, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
-int getAddressLine(char *token, opcode_table *opcodes, int opcode, int lineNum);
+int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
 void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes){
@@ -14,6 +14,7 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
     int isCorrect = 1; /* errors flag */
     int *p_isCorrect = &isCorrect;
     int opcode; /* opcode decimal value */
+    SentenceType type;
     FILE *input;
     strcat(fileName, ".am");
     input = openFile(fileName, "r");
@@ -22,25 +23,25 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
         lineNum++;
         buffer = safeMalloc(sizeof (line));
         strcpy(buffer,line);
-
-        /* separate by tokens */
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " ,\t");
-        if (token[strlen(token)-1] == ':'){ /* label declaration case */
+        type = getSentence(opcodes, token);
+        if (type == LABEL){ /* label declaration case */
             symbols = labelLine(pDC, pIC, token, symbols, symbols_head, opcodes, lineNum, p_isCorrect);
-        } else if (strcmp(token,".define") == 0) { /* constant definition case */
+        } else if (type == DEFINE) { /* constant definition case */
             symbols = createSymbol(symbols, token, buffer, "mdefine");
-        } else if ((opcode = getOpcode(opcodes, token)) != UNKNOWN_OPERATOR){
-            IC += getAddressLine(token, opcodes, opcode, lineNum);
+        } else if (type == INSTRUCTION){
+            opcode = getOpcode(opcodes, token);
+            IC += processInstruction(token, opcodes, opcode, lineNum);
             IC++;
-        } else if (strcmp(token,".extern") == 0) { /* extern symbol definition case */
+        } else if (type == EXTERN) { /* extern symbol definition case */
             token = strtok(NULL, " \t");
             entries_list = createSymbol(entries_list, token, token, "extern");
             symbols = createSymbol(symbols, token, buffer, "extern");
-        } else if (strcmp(token,".entry") == 0) { /* entry symbol definition case */
+        } else if (type == ENTRY) { /* entry symbol definition case */
             token = strtok(NULL, " \t");
             entries_list = createSymbol(entries_list, token, token, "entry");
-        } else if (token[0] == ';'){ /* comment case */
+        } else if (type == COMMENT){ /* comment case */
             free(buffer);
             continue;
         } else { /* Illegal case */
@@ -54,7 +55,7 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
 
     if (entries_list != NULL)
         entries_list->next = NULL;
-    symbols = symbols_head;
+
     /* add up counters */
     tmp = symbols_head;
     while (tmp != NULL){
@@ -66,30 +67,6 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
     fclose(input);
 }
 
-int getAddressingMode (char *operand){
-    OperandType type;
-    operand = deleteWhiteSpaces(operand);
-    type = getOpType(operand);
-    /* check for empty operator */
-    if (strchr(operand,' ') != NULL) {
-        return MISSING_COMMA;
-    }
-    /* get mode */
-    if (operand[0] == '\0')
-        return UNKNOWN_OPERATOR;
-    if (type == REG_DOES_NOT_EXIST)
-        return REG_DOES_NOT_EXIST;
-    if (type == REGISTER) { /* register */
-        return REGISTER_MODE;
-    } else if (type == IMMEDIATE_OP){ /* immediate */
-        return IMMEDIATE;
-    } else if (type == LABEL_OP){ /* direct */
-        return DIRECT_MODE;
-    } else if (type == ARRAY_INDEX) { /* indexed */
-        return INDEXED_MODE;
-    }
-    return UNKNOWN_OPERAND;
-}
 
 int stringLine(char *token, int *isCorrect, int lineNum){
     int DC = 1;
@@ -109,9 +86,10 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
+
 int createEntries(list *labels, list *entries, char *fileName){
     int isCorrect = 1;
-    list *tmp, *head = entries;
+    list *head;
     char ent_fileName[strlen(fileName)+1], ext_fileName[strlen(fileName)+1];
     FILE *ent = NULL, *ext = NULL;
     strncpy(ent_fileName, fileName, strlen(fileName) - 2);
@@ -120,32 +98,27 @@ int createEntries(list *labels, list *entries, char *fileName){
     strcpy(strrchr(ext_fileName, '.'), ".ext");
 
     while (entries != NULL){
-        if (strcmp(entries->type, "extern") == 0)
+        if (strcmp(entries->type, "extern") == 0) {
             entries->value = 0;
+            if (ext == NULL)
+                ext = openFile(ext_fileName, "w");
+            fprintf(ext, "%s\t%.4d\n",entries->name,entries->value);
+        }
         if (strcmp(entries->type, "entry") == 0) {
-            if ((tmp = search_by_name(labels, entries->name)) != NULL)
-                entries->value = tmp->value;
+            if ((head = search_by_name(labels, entries->name)) != NULL) {
+                entries->value = head->value;
+                if (ent == NULL)
+                    ent = openFile(ent_fileName, "w");
+                fprintf(ent, "%s\t%.4d\n",entries->name,entries->value);
+            }
             else {
-                printError(UNDEFINED_ENTRY, 0); /* lineNum!!!! */
+                printError(UNDEFINED_ENTRY, 0);
                 isCorrect = 0;
             }
         }
         entries = entries->next;
     }
-    entries = head;
-    while (entries != NULL){
-        if (strcmp(entries->type, "entry") == 0) {
-            if (ent == NULL)
-                ent = openFile(ent_fileName, "w");
-            fprintf(ent, "%s\t%.4d\n",entries->name,entries->value);
-        }
-        if (strcmp(entries->type, "extern") == 0) {
-            if (ext == NULL)
-                ext = openFile(ext_fileName, "w");
-            fprintf(ext, "%s\t%.4d\n",entries->name,entries->value);
-        }
-        entries = entries->next;
-    }
+
     if (ent != NULL)
         fclose(ent);
     if (ext != NULL)
@@ -178,7 +151,7 @@ list *labelLine (int *DC, int *IC, char *token, list *labels_last, list *labels_
     } else if ((opcode = getOpcode(opcodes, token)) != UNKNOWN_OPERATOR) { /* opcode found */
         labels_last->type = strDuplicate("code");
         labels_last->value = *IC; /* адрес строки оператора */
-        (*IC) += getAddressLine(token, opcodes, opcode, lineNum);
+        (*IC) += processInstruction(token, opcodes, opcode, lineNum);
         (*IC)++;
     } else { /* UNKNOWN COMMAND */
         printError(UNKNOWN_OPERATOR, lineNum);
@@ -188,18 +161,9 @@ list *labelLine (int *DC, int *IC, char *token, list *labels_last, list *labels_
     return labels_last;
 }
 
-/* returns opcode value if exist or UNKNOWN_OPERATOR if doesn't */
-int getOpcode(opcode_table *opcodes, char *token){
-    int i;
-    for (i = 0; i < MAX_OPERATORS; ++i) {
-        if (strcmp(token, opcodes->name[i]) == 0)
-            return i;
-    }
-    return UNKNOWN_OPERATOR;
-}
 
 /*  */
-int getAddressLine(char *token, opcode_table *opcodes, int opcode, int lineNum){
+int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
     for (j = 1; (token = strtok(NULL, ",")) != NULL; j++) { /* 'j' is operand number */
         if (j > opcodes->max_ops[opcode])

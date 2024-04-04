@@ -1,5 +1,9 @@
 #include "header.h"
 
+/*
+ * Sentence processing functions
+ */
+
 OperandType getOpType(char *token){
     token = deleteWhiteSpaces(token);
     if (token[0] == 'r' && isdigit(token[1])){ /* REGISTER, */
@@ -67,6 +71,8 @@ SentenceType getSentence(opcode_table *opcodes, char *token){
         return EMPTY;
     else if (token[strlen(token)-1] == ':')
         return LABEL;
+    else if (strcmp(token,".define") == 0)
+        return DEFINE;
     else if (getOpcode(opcodes, token) != UNKNOWN_OPERATOR) /* instruction */
         return INSTRUCTION;
     else if (token [0] == '.') { /* directive sentence */
@@ -78,6 +84,41 @@ SentenceType getSentence(opcode_table *opcodes, char *token){
             return DATA;
         else if (strcmp(token, ".string") == 0)/* .string */
             return STRING;
+    }
+    return UNKNOWN_OPERATOR;
+}
+
+int getAddressingMode (char *operand){
+    OperandType type;
+    operand = deleteWhiteSpaces(operand);
+    type = getOpType(operand);
+    /* check for empty operator */
+    if (strchr(operand,' ') != NULL) {
+        return MISSING_COMMA;
+    }
+    /* get mode */
+    if (operand[0] == '\0')
+        return UNKNOWN_OPERATOR;
+    if (type == REG_DOES_NOT_EXIST)
+        return REG_DOES_NOT_EXIST;
+    if (type == REGISTER) { /* register */
+        return REGISTER_MODE;
+    } else if (type == IMMEDIATE_OP){ /* immediate */
+        return IMMEDIATE;
+    } else if (type == LABEL_OP){ /* direct */
+        return DIRECT_MODE;
+    } else if (type == ARRAY_INDEX) { /* indexed */
+        return INDEXED_MODE;
+    }
+    return UNKNOWN_OPERAND;
+}
+
+/* returns opcode value if exist or UNKNOWN_OPERATOR if doesn't */
+int getOpcode(opcode_table *opcodes, char *token){
+    int i;
+    for (i = 0; i < MAX_OPERATORS; ++i) {
+        if (strcmp(token, opcodes->name[i]) == 0)
+            return i;
     }
     return UNKNOWN_OPERATOR;
 }
