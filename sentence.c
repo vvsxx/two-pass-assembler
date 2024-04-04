@@ -59,11 +59,7 @@ int getOpValue (char *op, list *symbols){
 }
 
 SentenceType getSentence(opcode_table *opcodes, char *token){
-    /* delete white spaces */
-    while (token[0] == ' ')
-        token++;
-    while(token[strlen(token)-1] == ' ')
-        token[strlen(token)-1] = '\0';
+    token = deleteWhiteSpaces(token);
 
     if (token[0] == ';') /* comment */
         return COMMENT;
