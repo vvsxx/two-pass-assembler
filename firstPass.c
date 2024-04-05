@@ -9,6 +9,7 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
 void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes){
     list *tmp, *symbols_head = symbols, *entries_head = NULL, *entries_list = NULL; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
+    char *newFileName;
     int IC = 100, DC = 0, lineNum = 0; /* counters */
     int *pIC = &IC, *pDC = &DC;
     int isCorrect = 1; /* errors flag */
@@ -16,8 +17,10 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
     int opcode; /* opcode decimal value */
     SentenceType type;
     FILE *input;
-    strcat(fileName, ".am");
-    input = openFile(fileName, "r");
+    newFileName = safeMalloc(sizeof (fileName) + 3); /* +.am */
+    strcpy(newFileName, fileName);
+    strcat(newFileName, ".am");
+    input = openFile(newFileName, "r");
     /* read each line from .am file */
     while (fgets(line, sizeof(line), input) != NULL){
         lineNum++;
@@ -63,7 +66,7 @@ void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes
             tmp->value += IC;
         tmp = tmp->next;
     }
-    isCorrect = createEntries(symbols_head, entries_head, fileName);
+    isCorrect = createEntries(symbols_head, entries_head, newFileName);
     fclose(input);
 }
 
@@ -123,6 +126,7 @@ int createEntries(list *labels, list *entries, char *fileName){
         fclose(ent);
     if (ext != NULL)
         fclose(ext);
+    free(fileName);
     return isCorrect;
 }
 

@@ -73,29 +73,6 @@ void printError(int errorCode, int line){
 }
 
 
-void writeObject(image *img, char *filename){
-    FILE *objFile;
-    char *newName;
-    int IC;
-    word *tmp;
-    newName = safeMalloc(sizeof (filename) + 5); /* +.obj + \0 */
-    strcpy(newName, filename);
-    strcat(newName, ".obj\0");
-    objFile = openFile(newName, "w");
-    IC = img->IC-FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
-    fprintf(objFile, "%d %d\n", IC, img->DC);
-    tmp = img->code_h;
-    while (tmp != NULL){
-        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
-        tmp = tmp->next;
-    }
-    tmp = img->data_h;
-    while (tmp != NULL){
-        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
-        tmp = tmp->next;
-    }
-}
-
 
 void test(struct image *img){
     int i, counter, int_val, j, error;

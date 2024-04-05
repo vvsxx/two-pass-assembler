@@ -11,13 +11,17 @@ word * createInstructionWord(image *img);
 void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
     char line[LINE_LENGTH], *token; /* line processing */
+    char *amFile;
     char *src, *dst; /* operands */
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
+    amFile = safeMalloc(sizeof (fileName) + 3); /* +.am */
+    strcpy(amFile, fileName);
+    strcat(amFile, ".am");
     SentenceType sentence;
     FILE *input;
-    input = openFile(fileName, "r");
+    input = openFile(amFile, "r");
     while (fgets(line, sizeof(line), input) != NULL) {
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
@@ -83,7 +87,7 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
     /* create encrypted base 4 values */
     cryptWord(img->code_h);
     cryptWord(img->data_h);
-
+    free(amFile);
     fclose(input);
 }
 
@@ -195,4 +199,28 @@ word * createInstructionWord(image *img){
         img->code = createWordNode(img->code, img->IC);
     }
     return img->code;
+}
+
+/* writes .obj file */
+void writeObject(image *img, char *filename){
+    FILE *objFile;
+    char *newName;
+    int IC;
+    word *tmp;
+    newName = safeMalloc(sizeof (filename) + 4); /* +.obj + \0 */
+    strcpy(newName, filename);
+    strcat(newName, ".ob\0");
+    objFile = openFile(newName, "w");
+    IC = img->IC-FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
+    fprintf(objFile, "%d %d\n", IC, img->DC);
+    tmp = img->code_h;
+    while (tmp != NULL){
+        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+        tmp = tmp->next;
+    }
+    tmp = img->data_h;
+    while (tmp != NULL){
+        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+        tmp = tmp->next;
+    }
 }
