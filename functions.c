@@ -114,6 +114,7 @@ int isNumber(char *token){
     return isdigit(token[0]);
 }
 
+/* encrypts binary value to encrypted base 4 value */
 void cryptWord(word *wrd){
     word *tmp = wrd;
     while (tmp != NULL){
