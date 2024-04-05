@@ -30,19 +30,17 @@ void *safeMalloc(size_t size) {
 
 
 
-void dec_to_bin(int decimal, int *binary, int array_size){
+void decimalToBinary(int decimal, int *binary, int array_size){
     int i, tmp = decimal;
-
-    for (i = 0; i < array_size; ++i)
-        binary[i] = 0;
-
+    resetBits(binary, array_size);
     i = 0;
-    /* convert to binary as is */
+    /* positive value case */
     while (tmp && i < array_size){
         binary[i] = tmp % 2;
         i++;
         tmp /= 2;
     }
+    /* negative value case */
     if(decimal < 0){
         /* invert all digits */
         for (i = 0; i < array_size; i++) {
@@ -58,31 +56,26 @@ void dec_to_bin(int decimal, int *binary, int array_size){
     }
 }
 
-void bin_to_4secure(char *binary, char secure4){
-    int i,j,res = 7;
+
+
+void binaryToEncrypted4(const int *binary, char *result){
+    int i,j,res = 6;
     int base4[4][2] = {{0,0},
                        {0,1},
                        {1,0},
                        {1,1}};
-    int bin[] = {0,0,0,0,1,1,1,0,0,0,1,0,1,0};
-    int result[8] = {0,0,0,0,0,0,0,0};
-    char secure[] = {'*','#','%','!'};
 
+    int secure[] = {'*','#','%','!'};
 
-    if (bin[0] == 1) { /* is negative */
-        /* code for negative case*/
-    } else if (bin[0] == 0){
-        for (i = WORD_L-1; i > 0; i -= 2) {
-            for (j = 0; j < 4; ++j) {
-                if(base4[j][0] == bin[i-1] && base4[j][1] == bin[i]) {
-                    result[res] = j;
-                    res--;
-                    break;
-                }
+    result[7] = '\0';
+    for (i = 0; i < WORD_L; i += 2) {
+        for (j = 0; j < 4; ++j) {
+            if(base4[j][0] == binary[i+1] && base4[j][1] == binary[i]) {
+                result[res] = (char)secure[j];
+                res--;
+                break;
             }
         }
-    } else {
-        /* ERROR */
     }
 }
 
@@ -119,4 +112,12 @@ int isNumber(char *token){
     if(token[0] == '-' || token[0] == '+')
         return isdigit(token[1]);
     return isdigit(token[0]);
+}
+
+void cryptWord(word *wrd){
+    word *tmp = wrd;
+    while (tmp != NULL){
+        binaryToEncrypted4(tmp->binary, tmp->secure4);
+        tmp = tmp->next;
+    }
 }

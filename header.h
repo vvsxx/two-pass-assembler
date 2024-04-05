@@ -47,8 +47,7 @@
 #define MISSING_COMMA (-12)
 #define REG_DOES_NOT_EXIST (-13)
 
-
-
+/* functions */
 FILE * openFile(char *fileName, char *mode);
 void freeSymList(struct list *p);
 void *safeMalloc(size_t size);
@@ -56,8 +55,8 @@ void preProcessor(char *filename);
 void fillTable(opcode_table *table);
 struct list *search_by_name(struct list *listHead, char *string);
 struct macros_list *search_macros_by_name(struct macros_list *listHead, char *string);
-void dec_to_bin(int decimal, int *binary, int array_size);
-void bin_to_4secure(char *binary, char secure4);
+void decimalToBinary(int decimal, int *binary, int array_size);
+void binaryToEncrypted4(const int *binary, char *result);
 void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes);
 void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols);
 list  * createSymbol(struct list  *list, char *token, char *line, char *type);
@@ -72,3 +71,4 @@ SentenceType getSentence(opcode_table *opcodes, char *token);
 char *deleteWhiteSpaces(char *token);
 int isNumber(char *token);
 OperandType getOpType(char *token);
+void cryptWord(word *wrd);

@@ -7,8 +7,8 @@ void freeWordList(struct word *head) {
         head = head->next;
         if (temp->binary != NULL)
             free(temp->binary);
-//        if (temp->secure4 != NULL)
-//            free(temp->secure4);
+        if (temp->secure4 != NULL)
+            free(temp->secure4);
 
         free(temp);
     }
@@ -117,6 +117,7 @@ word * createWordNode(struct word *node, int addr){
     tmp = (struct word *) safeMalloc(sizeof(struct word));
     tmp->next = NULL;
     tmp->binary = (int*)safeMalloc(WORD_L * sizeof(int));
+    tmp->secure4 = safeMalloc(8 * sizeof (int));
     resetBits(tmp->binary, WORD_L);
     tmp->address = addr;
     if (node != NULL)

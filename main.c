@@ -1,5 +1,6 @@
 #include "header.h"
-void test(struct image *img);
+void test_binary(struct image *img);
+void test_encrypted(struct image *img);
 
 int main(int argc, char *argv[]) {
     int i;
@@ -29,8 +30,8 @@ int main(int argc, char *argv[]) {
         secondPass(argv[i], img, opcodes, symbols); /* convert to binary than to base4 secure and write files */
 
 
-        test(img);
-
+        test_binary(img);
+        //test_encrypted(img);
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);
@@ -78,16 +79,21 @@ void printError(int errorCode, int line){
 
 
 
-void test(struct image *img){
+void test_binary(struct image *img){
     int i, counter, int_val, j, error;
     char line[LINE_LENGTH], *addr, *val, tmp[2];
-    FILE *testfile;
+    char encrypted[10];
+    FILE *testfile, *encfile;
     word *wrd_tmp = img->code_h;
     testfile = openFile("testfile", "r");
+    encfile = openFile("encrypted_test", "r");
+    memset(encrypted, '\0', sizeof (encrypted));
     /*  TESTS */
     while (wrd_tmp != NULL){
         error = 0;
         counter = wrd_tmp->address;
+        fgets(encrypted, sizeof(encrypted), encfile);
+        encrypted[strcspn(encrypted, "\r")] = '\0';
         if (fgets(line, sizeof(line), testfile) != NULL){
             addr = strtok(line, " \t");
             val = strtok(NULL, " \t");
@@ -96,7 +102,9 @@ void test(struct image *img){
         }
         if (counter != atoi(addr))
             error = 1;
-        printf("%d   ", counter);
+        if (strcmp(encrypted, wrd_tmp->secure4) != 0)
+            error = 1;
+        printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
         j = 0;
         for (i = WORD_L - 1; i >= 0; --i, j++) {
             tmp[0] = val[j];
@@ -124,7 +132,8 @@ void test(struct image *img){
         }
         if (counter != atoi(addr))
             error = 1;
-        printf("%d   ", counter);
+        printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
+
         j = 0;
         for (i = WORD_L - 1; i >= 0; --i, j++) {
             tmp[0] = val[j];
