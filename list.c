@@ -1,6 +1,18 @@
 #include "header.h"
 
 
+/* free memory */
+void freeSymList(struct list *p){
+    void *tmp;
+    while (p != NULL) {
+        tmp = p->next;
+        free(p->name);
+        free(p->type);
+        free(p);
+        p = tmp;
+    }
+}
+
 void freeWordList(struct word *head) {
     while (head != NULL) {
         word *temp = head;
@@ -13,7 +25,6 @@ void freeWordList(struct word *head) {
         free(temp);
     }
 }
-
 
 void freeMacList(struct macros_list *head) {
     while (head != NULL) {
@@ -53,7 +64,6 @@ void freeList(void *node, DataType type) {
 }
 
 list * createSymbol(struct list *list, char *token, char *line, char *type){
-    struct list *tmp;
     if (strcmp(type, "mdefine") == 0) {
         line = strstr(line, ".define");
         line += strlen(".define");
@@ -100,17 +110,6 @@ struct macros_list *search_macros_by_name(struct macros_list *listHead, char *st
 }
 
 
-/* free memory */
-void freeSymList(struct list *p){
-    void *tmp;
-    while (p != NULL) {
-        tmp = p->next;
-        free(p->name);
-        free(p->type);
-        free(p);
-        p = tmp;
-    }
-}
 
 word * createWordNode(struct word *node, int addr){
     word *tmp = node == NULL ? node : node->next;

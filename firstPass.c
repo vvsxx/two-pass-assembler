@@ -1,12 +1,11 @@
 #include "header.h"
 
-
 list *labelLine (int *DC, int *IC, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
-void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes){
+void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
     list *tmp, *symbols_head = symbols, *entries_head = NULL, *entries_list = NULL; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char *newFileName;

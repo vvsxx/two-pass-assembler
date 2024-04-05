@@ -50,7 +50,6 @@
 
 /* functions */
 FILE * openFile(char *fileName, char *mode);
-void freeSymList(struct list *p);
 void *safeMalloc(size_t size);
 void preProcessor(char *filename);
 void fillTable(opcode_table *table);
@@ -58,7 +57,7 @@ struct list *search_by_name(struct list *listHead, char *string);
 struct macros_list *search_macros_by_name(struct macros_list *listHead, char *string);
 void decimalToBinary(int decimal, int *binary, int array_size);
 void binaryToEncrypted4(const int *binary, char *result);
-void firstPass(char *fileName, image *img, list  *symbols, opcode_table *opcodes);
+void firstPass(char *fileName, list  *symbols, opcode_table *opcodes);
 void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols);
 list  * createSymbol(struct list  *list, char *token, char *line, char *type);
 void printError(int errorCode, int line);

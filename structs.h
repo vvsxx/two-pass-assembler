@@ -5,14 +5,14 @@ struct macros_list {
     char *name;
     int lines;
     char **data;
-    struct macros_list *next, *head;
+    struct macros_list *next;
 };
 
 struct list {
     char *name;
     char *type;
     int value;
-    struct list *next, *head;
+    struct list *next;
 };
 
 
