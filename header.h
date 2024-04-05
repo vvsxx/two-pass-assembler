@@ -12,6 +12,7 @@
 #define MAX_MODES 4
 #define OPCODE_LENGTH 4
 #define OP_WORD_L 12
+#define FIRST_ADDRESS 100
 
 /* word  positioning */
 #define OPCODE_START 6
@@ -72,3 +73,4 @@ char *deleteWhiteSpaces(char *token);
 int isNumber(char *token);
 OperandType getOpType(char *token);
 void cryptWord(word *wrd);
+void writeObject(image *img, char *filename);
