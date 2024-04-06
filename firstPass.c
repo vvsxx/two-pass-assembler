@@ -10,13 +10,12 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char *newFileName;
     int IC = 100, DC = 0, lineNum = 0; /* counters */
-    int *pIC = &IC, *pDC = &DC;
     int isCorrect = 1; /* errors flag */
-    int *p_isCorrect = &isCorrect;
+    int *pIC = &IC, *pDC = &DC, *p_isCorrect = &isCorrect; /* pointers */
     int opcode; /* opcode decimal value */
     SentenceType type;
     FILE *input;
-    newFileName = safeMalloc(sizeof (fileName) + 3); /* +.am */
+    newFileName = safeMalloc(sizeof (fileName) + sizeof (".am")); /* +.am */
     strcpy(newFileName, fileName);
     strcat(newFileName, ".am");
     input = openFile(newFileName, "r");

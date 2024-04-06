@@ -101,6 +101,7 @@ void test(struct image *img){
             error = 1;
         printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
         j = 0;
+        error = 0;
         for (i = WORD_L - 1; i >= 0; --i, j++) {
             tmp[0] = val[j];
             tmp[1] = '\0';
@@ -117,7 +118,6 @@ void test(struct image *img){
     }
     wrd_tmp = img->data_h;
     while (wrd_tmp != NULL){
-        error = 0;
         counter = wrd_tmp->address;
         if (fgets(line, sizeof(line), testfile) != NULL){
             addr = strtok(line, " \t");
@@ -128,7 +128,7 @@ void test(struct image *img){
         if (counter != atoi(addr))
             error = 1;
         printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
-
+        error = 0;
         j = 0;
         for (i = WORD_L - 1; i >= 0; --i, j++) {
             tmp[0] = val[j];
