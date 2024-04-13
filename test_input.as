@@ -1,4 +1,3 @@
-
  .entry LIST
  .extern EX
     .define sz = 2

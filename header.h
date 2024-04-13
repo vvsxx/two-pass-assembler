@@ -51,7 +51,7 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes);
 void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols);
 list  * createSymbol(struct list  *list, char *token, char *line, SentenceType type);
 void printError(int errorCode, int line);
-int createEntries(list *labels, list *entries, char *fileName);
+int createEntries(list *labels, char *fileName);
 int getOpcode(opcode_table *opcodes, char *token);
 int getAddressingMode (char *operand);
 void resetBits(int *arr, int size);
