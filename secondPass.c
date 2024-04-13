@@ -7,6 +7,7 @@ void processDataDirective(char *token, image *img, list *symbols);
 void createOpValueLine(char *op, image *img, list *symbols, int pos);
 char * processOperand(char *op, image *img, int pos);
 word * createInstructionWord(image *img);
+void addAddress(int **arr, int address);
 
 void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
@@ -223,4 +224,19 @@ void writeObject(image *img, char *filename){
         fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
         tmp = tmp->next;
     }
+}
+
+int *safeRealloc(int *arr, size_t size) {
+    int *temp = realloc(arr, size);
+    if (temp == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    return temp;
+}
+
+void addAddress(int **arr, int address) {
+    int newSize = (*arr == NULL) ? 1 : sizeof(**arr) + 1;
+    *arr = safeRealloc(*arr, newSize * sizeof(int));
+    (*arr)[newSize - 1] = address;
 }

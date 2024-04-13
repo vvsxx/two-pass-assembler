@@ -12,10 +12,11 @@ struct macros_list {
 struct list {
     char *name;
     char *type;
-    int isEntry;
-    int isExternal;
     int value;
     int ARE;
+    int isEntry;
+    int isExternal;
+    int **addresses;
     struct list *next;
 };
 

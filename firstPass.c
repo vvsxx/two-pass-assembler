@@ -1,6 +1,6 @@
 #include "header.h"
 
-list *labelLine (int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
+list *labelLine (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
@@ -32,11 +32,11 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
         type = getSentence(opcodes, token);
         if (type == LABEL){ /* label declaration case */
             strcpy(labelName, token);
-            if ((token = strtok(NULL, " \t")) == NULL)
+            if ((token = strtok(NULL, " \t")) == NULL) /* label before empty line */
                 continue;
             type = getSentence(opcodes, token);
             if (type != ENTRY && type != EXTERN && token != NULL)
-                symbols = labelLine(pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum, p_isCorrect);
+                symbols = labelLine(type,pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum, p_isCorrect);
         } else if (type == DEFINE) { /* constant definition case */
             symbols = createSymbol(symbols, token, buffer, type);
         } else if (type == INSTRUCTION){
@@ -49,9 +49,11 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
             symbols = createSymbol(symbols, token, buffer, type);
         } else if (type == ENTRY) { /* entry symbol definition case */
             token = strtok(NULL, " \t");
-            entries_list = createSymbol(entries_list, token, token, type);
+            if ((tmp = getElementByName(symbols_head, token)) != NULL)
+                tmp->isEntry = 1;
+            else
+                symbols = createSymbol(symbols, token, token, type);
         } else if (type == COMMENT){ /* comment case */
-            free(buffer);
             continue;
         } else { /* Illegal case */
             printError(UNKNOWN_OPERATOR,lineNum);
@@ -139,38 +141,41 @@ int createEntries(list *labels, list *entries, char *fileName){
     return isCorrect;
 }
 
-list *labelLine (int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
+list *labelLine (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
     int opcode;
+    list *current, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if (getElementByName(labels_head, labelName) != NULL) {
-        printError(MULTIPLE_LABEL, lineNum);
-        (*isCorrect) = 0;
+    if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
+        if (strcmp(tmp->type, "entry") != 0) {
+            printError(MULTIPLE_LABEL, lineNum);
+            (*isCorrect) = 0;
+        } else {
+            current = tmp;
+        }
+    } else {
+        labels_last = createSymbol(labels_last, labelName, labelName, type);
+        current = labels_last;
     }
 
-    if (strcmp(token, ".data") == 0){
-        labels_last = createSymbol(labels_last, labelName, labelName, DATA);
-        labels_last->type = strDuplicate("data");
-        labels_last->value =  *DC;
-        labels_last->ARE = ARE_RELOCATABLE;
-        while ((token = strtok(NULL, ",")) != NULL){
-            (*DC)++;
+    if (type == DATA || type == STRING){
+        current->type = strDuplicate("data");
+        current->ARE = ARE_RELOCATABLE;
+        current->value = *DC;
+        if (type == STRING) {
+            token = strtok(NULL, " \t");
+            *DC += stringLine(token, isCorrect, lineNum);
+        } else {
+            while ((token = strtok(NULL, ",")) != NULL)
+                (*DC)++;
         }
-    } else if (strcmp(token, ".string") == 0){
-        labels_last = createSymbol(labels_last, labelName, labelName, STRING);
-        labels_last->type = strDuplicate("data");
-        labels_last->ARE = ARE_RELOCATABLE;
-        labels_last->value = *DC;
-        token = strtok(NULL, " \t");
-        (*DC) += stringLine(token, isCorrect, lineNum);
-    } else if ((opcode = getOpcode(opcodes, token)) != UNKNOWN_OPERATOR) { /* opcode found */
-        labels_last = createSymbol(labels_last, labelName, labelName, INSTRUCTION);
-        labels_last->type = strDuplicate("code");
-        labels_last->value = *IC; /* адрес строки оператора */
-        (*IC) += processInstruction(token, opcodes, opcode, lineNum);
-        (*IC)++;
-    } else { /* UNKNOWN COMMAND */
+    } else if (type == INSTRUCTION) {
+        opcode = getOpcode(opcodes, token);
+        current->type = strDuplicate("code");
+        current->value = *IC;
+        (*IC) += processInstruction(token, opcodes, opcode, lineNum) + 1;
+    } else {
         printError(UNKNOWN_OPERATOR, lineNum);
-        (*isCorrect) = 0;
+        *isCorrect = 0;
     }
     return labels_last;
 }

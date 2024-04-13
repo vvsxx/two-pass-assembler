@@ -40,8 +40,9 @@ int getOpValue (char *op, list *symbols){
         if (op[0] == '-' || op[0] == '+')
             return atoi(op);
     } else if (type == LABEL_OP) { /* label address or constant value*/
-        if ((symbol = getElementByName(symbols, op)) != NULL)
+        if ((symbol = getElementByName(symbols, op)) != NULL){
             return symbol->value;
+            }
         else
             return UNKNOWN_OPERAND;
     } else if (type == ARRAY_INDEX){ /* array index  */

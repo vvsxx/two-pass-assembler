@@ -95,6 +95,7 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
         list->type = strDuplicate("extern");
         list->isExternal = 1;
         list->ARE = ARE_EXTERNAL;
+        list->value = 0;
     } else if (type == DEFINE){
         list->ARE = ARE_ABSOLUTE;
     } else if (type == INSTRUCTION){
