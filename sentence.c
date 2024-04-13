@@ -39,7 +39,7 @@ int getOpValue (char *op, list *symbols){
         op++; /* skip '#' */
         if (op[0] == '-' || op[0] == '+')
             return atoi(op);
-    } else if (type == LABEL_OP) { /* label address or constant value*/
+    } else if (type == LABEL_OP) { /* label address or constant */
         if ((symbol = getElementByName(symbols, op)) != NULL){
             return symbol->value;
             }

@@ -5,7 +5,7 @@ int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
-void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
+int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char *newFileName;
@@ -55,6 +55,15 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
                 symbols = createSymbol(symbols, token, token, type);
         } else if (type == COMMENT){ /* comment case */
             continue;
+        }
+        else if (type == DATA || type == STRING){
+            if (type == STRING) {
+                token = strtok(NULL, " \t");
+                DC += stringLine(token, &isCorrect, lineNum);
+            } else {
+                while ((token = strtok(NULL, ",")) != NULL)
+                    DC++;
+            }
         } else { /* Illegal case */
             printError(UNKNOWN_OPERATOR,lineNum);
             isCorrect = 0;
@@ -67,9 +76,9 @@ void firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
             tmp->value += IC;
         tmp = tmp->next;
     }
-    isCorrect = createEntries(symbols_head, newFileName);
     free(buffer);
     fclose(input);
+    return isCorrect;
 }
 
 
@@ -91,43 +100,6 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
-
-int createEntries(list *labels, char *fileName){
-    int isCorrect = 1;
-    list *head;
-    char ent_fileName[strlen(fileName)+1], ext_fileName[strlen(fileName)+1];
-    FILE *ent = NULL, *ext = NULL;
-    strncpy(ent_fileName, fileName, strlen(fileName) - 2);
-    strncpy(ext_fileName, fileName, strlen(fileName) - 2);
-    strcpy(strrchr(ent_fileName, '.'), ".ent");
-    strcpy(strrchr(ext_fileName, '.'), ".ext");
-    head = labels;
-    while (head != NULL){
-        if (head->isExternal) {
-            if (ext == NULL)
-                ext = openFile(ext_fileName, "w");
-            fprintf(ext, "%s\t%.4d\n",head->name,head->value);
-        }
-        if (head->isEntry) {
-            if (strcmp(head->type,"entry") != 0) {
-                if (ent == NULL)
-                    ent = openFile(ent_fileName, "w");
-                fprintf(ent, "%s\t%.4d\n",head->name,head->value);
-            } else {
-                printError(UNDEFINED_ENTRY, 0);
-                isCorrect = 0;
-            }
-        }
-        head = head->next;
-    }
-
-    if (ent != NULL)
-        fclose(ent);
-    if (ext != NULL)
-        fclose(ext);
-    free(fileName);
-    return isCorrect;
-}
 
 list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
     int opcode;

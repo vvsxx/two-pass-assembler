@@ -16,7 +16,7 @@ struct list {
     int ARE;
     int isEntry;
     int isExternal;
-    int **addresses;
+    int *addresses;
     struct list *next;
 };
 

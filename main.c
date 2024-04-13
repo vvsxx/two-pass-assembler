@@ -27,12 +27,12 @@ int main(int argc, char *argv[]) {
         img->DC = 0;
 
         preProcessor(argv[i]); /* deploy macros and create ".am" file */
-        firstPass(argv[i], symbols, opcodes);  /* fill data tables and code image */
-        secondPass(argv[i], img, opcodes, symbols); /* convert to binary than to base4 secure and write files */
-        writeObject(img, argv[i]);
+        if (firstPass(argv[i], symbols, opcodes))  /* fill data tables and code image */
+            if (secondPass(argv[i], img, opcodes, symbols)) /* convert to binary than to base4 secure and write files */
+                writeObject(img, argv[i]);
+
 
         test(img);
-
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);

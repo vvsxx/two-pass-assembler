@@ -4,12 +4,12 @@ word * createWordNode(struct word *node, int addr);
 int getOpValue (char *op, list *symbols);
 void codeWords(char *op, image *img, list *symbols, int pos);
 void processDataDirective(char *token, image *img, list *symbols);
-void createOpValueLine(char *op, image *img, list *symbols, int pos);
-char * processOperand(char *op, image *img, int pos);
+void codeOpValue(char *op, image *img, list *symbols, int pos);
+char * codeAddressingMode(char *op, image *img, int pos);
 word * createInstructionWord(image *img);
-void addAddress(int **arr, int address);
+void addAddress(int *arr, int address);
 
-void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
+int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
     char line[LINE_LENGTH], *token; /* line processing */
     char *amFile;
@@ -17,6 +17,8 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
+    int isCorrect = 1;
+    list *symbol;
     amFile = safeMalloc(sizeof (fileName) + 3); /* +.am */
     strcpy(amFile, fileName);
     strcat(amFile, ".am");
@@ -43,10 +45,10 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
             /* set addressing mode bits and get operand tokens */
             opcode = getOpcode(op_table, token);
             if (op_table->max_ops[opcode] == 1) { /* only one operand is allowed */
-                dst = processOperand(dst, img, DST_POS);
+                dst = codeAddressingMode(dst, img, DST_POS);
             } else if (op_table->max_ops[opcode] == 2) { /* two operands allowed */
-                src = processOperand(src, img, SRC_MODE_POS); /* code src addressing mode */
-                dst = processOperand(dst, img, DST_POS); /* code dst addressing mode */
+                src = codeAddressingMode(src, img, SRC_MODE_POS); /* code src addressing mode */
+                dst = codeAddressingMode(dst, img, DST_POS); /* code dst addressing mode */
             }
             /* code opcode bits */
             decimalToBinary(opcode, &img->code->binary[OPCODE_START], OPCODE_LENGTH);
@@ -65,14 +67,16 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
                 } /* operands are different */
                 else {
                     /* src operand coding */
-                    createOpValueLine(src, img, symbols, SRC_MODE_POS);
+                    codeOpValue(src, img, symbols, SRC_MODE_POS);
                     /* dst operand coding */
-                    createOpValueLine(dst, img, symbols, DST_POS);
+                    codeOpValue(dst, img, symbols, DST_POS);
                 }
             } /* only destination operand */
             else if (dst != NULL){
-                createOpValueLine(dst, img, symbols, DST_POS);
+                codeOpValue(dst, img, symbols, DST_POS);
             }
+
+
             /* data declaration found */
         } else if (sentence == DATA || sentence == STRING) {
             processDataDirective(token, img, symbols);
@@ -88,8 +92,10 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
     /* create encrypted base 4 values */
     cryptWords(img->code_h);
     cryptWords(img->data_h);
+    isCorrect = createEntries(symbols, amFile);
     free(amFile);
     fclose(input);
+    return isCorrect;
 }
 
 
@@ -135,6 +141,8 @@ void codeWords(char *op, image *img, list *symbols, int pos){
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
         ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
         decimalToBinary(ARE, word, 2); /* code ARE */
+        if ((symbol = getElementByName(symbols, label)) != NULL && symbol->isExternal)
+            addAddress(symbol->addresses, img->IC);
         img->IC++;
         /* create next word */
         img->code = createWordNode(img->code, img->IC);
@@ -142,19 +150,24 @@ void codeWords(char *op, image *img, list *symbols, int pos){
         resetBits(img->code->binary, WORD_L);
         value = getOpValue(index, symbols); /* get index value */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code index value */
+        if ((symbol = getElementByName(symbols, index)) != NULL && symbol->isExternal)
+            addAddress(&symbol->addresses, img->IC);
     }
+    if ((symbol = getElementByName(symbols, op)) != NULL && symbol->isExternal)
+        addAddress(&symbol->addresses, img->IC);
+
 }
 
 
 
-void createOpValueLine(char *op, image *img, list *symbols, int pos){
+void codeOpValue(char *op, image *img, list *symbols, int pos){
     img->code = createWordNode(img->code, img->IC);
     resetBits(img->code->binary, WORD_L);
     codeWords(op, img, symbols, pos);
     img->IC++;
 }
 
-char * processOperand(char *op, image *img, int pos){
+char * codeAddressingMode(char *op, image *img, int pos){
     int adr_mode;
     op = strtok(NULL, " \t");
     adr_mode = getAddressingMode(op);
@@ -226,17 +239,45 @@ void writeObject(image *img, char *filename){
     }
 }
 
-int *safeRealloc(int *arr, size_t size) {
-    int *temp = realloc(arr, size);
-    if (temp == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        exit(EXIT_FAILURE);
-    }
-    return temp;
+
+
+void addAddress(int *arr, int address) {
+
 }
 
-void addAddress(int **arr, int address) {
-    int newSize = (*arr == NULL) ? 1 : sizeof(**arr) + 1;
-    *arr = safeRealloc(*arr, newSize * sizeof(int));
-    (*arr)[newSize - 1] = address;
+
+int createEntries(list *labels, char *fileName){
+    int isCorrect = 1;
+    list *head;
+    char ent_fileName[strlen(fileName)+1], ext_fileName[strlen(fileName)+1];
+    FILE *ent = NULL, *ext = NULL;
+    strncpy(ent_fileName, fileName, strlen(fileName) - 2);
+    strncpy(ext_fileName, fileName, strlen(fileName) - 2);
+    strcpy(strrchr(ent_fileName, '.'), ".ent");
+    strcpy(strrchr(ext_fileName, '.'), ".ext");
+    head = labels;
+    while (head != NULL){
+        if (head->isExternal) {
+            if (ext == NULL)
+                ext = openFile(ext_fileName, "w");
+            fprintf(ext, "%s\t%.4d\n",head->name,head->value);
+        }
+        if (head->isEntry) {
+            if (strcmp(head->type,"entry") != 0) {
+                if (ent == NULL)
+                    ent = openFile(ent_fileName, "w");
+                fprintf(ent, "%s\t%.4d\n",head->name,head->value);
+            } else {
+                printError(UNDEFINED_ENTRY, 0);
+                isCorrect = 0;
+            }
+        }
+        head = head->next;
+    }
+
+    if (ent != NULL)
+        fclose(ent);
+    if (ext != NULL)
+        fclose(ext);
+    return isCorrect;
 }
