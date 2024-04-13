@@ -100,9 +100,9 @@ char *deleteWhiteSpaces(char *token){
     if (token[strlen(token) - 1] == '\n')
         token[strlen(token) - 1] = '\0';
 
-    while (token[0] == ' ')
+    while (token[0] == ' ' || token[0] == '\t')
         token++;
-    while(token[strlen(token)-1] == ' ')
+    while(token[strlen(token)-1] == ' ' || token[strlen(token)-1] == '\t')
         token[strlen(token)-1] = '\0';
     return token;
 }
@@ -115,7 +115,7 @@ int isNumber(char *token){
 }
 
 /* encrypts binary value to encrypted base 4 value */
-void cryptWord(word *wrd){
+void cryptWords(word *wrd){
     word *tmp = wrd;
     while (tmp != NULL){
         binaryToEncrypted4(tmp->binary, tmp->secure4);

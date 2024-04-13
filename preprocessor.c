@@ -88,7 +88,7 @@ void writeFile(FILE *file, FILE *outputFile, macros_list *macros_h) {
             continue;
         }
 
-        if ((macros = search_macros_by_name(macros_h, token)) != NULL) { /* marco name found */
+        if ((macros = getMacroByName(macros_h, token)) != NULL) { /* marco name found */
             i = 0;
             data = macros->data[i];
             while (data != NULL && i <= macros->lines){

@@ -9,7 +9,7 @@ add_executable(assembler main.c
         list.c
         firstPass.c
         functions.c
-        tables.c
+        staticData.c
         structs.h
         secondPass.c
         typedef.h

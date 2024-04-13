@@ -85,8 +85,8 @@ void secondPass(char *fileName, image *img, opcode_table *op_table, list *symbol
         tmp = tmp->next;
     }
     /* create encrypted base 4 values */
-    cryptWord(img->code_h);
-    cryptWord(img->data_h);
+    cryptWords(img->code_h);
+    cryptWords(img->data_h);
     free(amFile);
     fclose(input);
 }
@@ -102,15 +102,15 @@ void codeWords(char *op, image *img, list *symbols, int pos){
     /* operand is address of label */
     if (addr_mode == DIRECT_MODE) {
         pos = DST_POS;
-        symbol = search_by_name(symbols, op);
-        ARE = strcmp(symbol->type, "extern") == 0 ? 1 : 2;
+        symbol = getElementByName(symbols, op);
+        ARE = symbol->ARE;
         value = symbol->value;
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
         decimalToBinary(ARE, word, 2);
     } else if (addr_mode == IMMEDIATE) { /* # */
         op++;
         if (isalpha(op[0])){ /* value is symbol */
-            if ((symbol = search_by_name(symbols, &op[0])) != NULL){
+            if ((symbol = getElementByName(symbols, &op[0])) != NULL){
                 value = symbol->value;
             }
         } else {
@@ -129,10 +129,10 @@ void codeWords(char *op, image *img, list *symbols, int pos){
         index[strlen(index) - 1] = '\0'; /* clean */
         index[0] = '\0'; /* clean */
         index++; /* clean */
-        symbol = search_by_name(symbols, label);
+        symbol = getElementByName(symbols, label);
         value = getOpValue(label, symbols); /* get array address */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
-        ARE = strcmp(symbol->type, "extern") == 0 ? 1 : 2; /* set ARE */
+        ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
         decimalToBinary(ARE, word, 2); /* code ARE */
         img->IC++;
         /* create next word */
@@ -207,7 +207,7 @@ void writeObject(image *img, char *filename){
     char *newName;
     int IC;
     word *tmp;
-    newName = safeMalloc(sizeof (filename) + 4); /* +.obj + \0 */
+    newName = safeMalloc(sizeof (filename) + 4); /* +.ob + \0 */
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");

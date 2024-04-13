@@ -7,6 +7,7 @@ int main(int argc, char *argv[]) {
     opcode_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     image *img; /* contains binary code */
+
     /* check that at least one argument had been received */
 
     
@@ -16,7 +17,7 @@ int main(int argc, char *argv[]) {
     }
 
     opcodes = safeMalloc(sizeof (opcode_table)); /* create opcodes table */
-    fillTable(opcodes); /* fill opcodes table */
+    getOpTable(opcodes); /* fill opcodes table */
 
     /* run assembler for each file */
     for (i = 1; i < argc; ++i) {
@@ -45,7 +46,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void printError(int errorCode, int line){
+void printError(ErrorCode errorCode, int line){
     switch (errorCode) {
         case UNKNOWN_OPERAND:
             fprintf(stdout,"Unknown operand in line %d\n", line); break;
@@ -66,7 +67,13 @@ void printError(int errorCode, int line){
         case REG_DOES_NOT_EXIST:
             fprintf(stdout,"Register does not exist in line %d\n", line); break;
         case UNDEFINED_ENTRY:
-            fprintf(stdout,"Undefined entry\n", line); break;
+            fprintf(stdout,"Undefined entry in line %d\n", line); break;
+        case ILLEAGL_LABEL_NAME:
+            fprintf(stdout,"Illegal label name in line %d\n", line); break;
+        case MULTIPLE_LABEL:
+            fprintf(stdout,"The label name repeats an existing one in line %d\n", line); break;
+        case TOO_LONG:
+            fprintf(stdout,"Too long label name in line %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

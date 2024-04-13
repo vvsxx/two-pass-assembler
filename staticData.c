@@ -1,7 +1,8 @@
 #include "header.h"
 
 
-void fillTable(opcode_table *table) {
+void getOpTable(opcode_table *table) {
+    int i;
     char name[MAX_OPERATORS][OPCODE_LENGTH] = {"mov", "cmp", "add", "sub",
                                                "not", "clr", "lea", "inc",
                                                "dec", "jmp", "bne", "red",
@@ -17,6 +18,11 @@ void fillTable(opcode_table *table) {
                                       {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1},
                                       {0, 1, 1, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 1, 1},
                                       {1, 1, 1, 1}, {0, 1, 0, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+
+    for (i = 0; i < MAX_REGISTERS; ++i) {
+        table->registerNames[i][0] = 'r';
+        table->registerNames[i][1] = '0' + i;
+    }
 
     memcpy(table->name, name, sizeof(name));
     memcpy(table->max_ops, max_ops, sizeof(max_ops));

@@ -1,4 +1,5 @@
 #define MAX_OPERATORS 16
+#define MAX_REGISTERS 8
 #define WORD_L 14
 
 struct macros_list {
@@ -11,7 +12,10 @@ struct macros_list {
 struct list {
     char *name;
     char *type;
+    int isEntry;
+    int isExternal;
     int value;
+    int ARE;
     struct list *next;
 };
 
@@ -21,6 +25,7 @@ struct opcode_table {
     int max_ops[MAX_OPERATORS];
     int allowed_src[MAX_OPERATORS][4];
     int allowed_dst[MAX_OPERATORS][4];
+    char registerNames[MAX_REGISTERS][3];
 };
 
 struct word {

@@ -39,7 +39,7 @@ void freeMacList(struct macros_list *head) {
     }
 }
 
-void freeList(void *node, DataType type) {
+void freeList(void *node, ListType type) {
     void *tmp;
     struct list *sym_p;
     struct word *word_p;
@@ -63,8 +63,8 @@ void freeList(void *node, DataType type) {
     }
 }
 
-list * createSymbol(struct list *list, char *token, char *line, char *type){
-    if (strcmp(type, "mdefine") == 0) {
+list * createSymbol(struct list *list, char *token, char *line, SentenceType type){
+    if (type == DEFINE) {
         line = strstr(line, ".define");
         line += strlen(".define");
         token = strtok(line, "="); /* УБРАТЬ ЦИФРЫ */
@@ -79,17 +79,32 @@ list * createSymbol(struct list *list, char *token, char *line, char *type){
     token = deleteWhiteSpaces(token);
 
     list->name = strDuplicate(token);
-    list->type = strDuplicate(type);
-    if (strcmp(type, "mdefine") == 0) {
+
+    if (type == DEFINE) {
         token = strtok(NULL, "=");
         list->value = atoi(token);
+        list->type = strDuplicate("mdefine");
     }
-
-    return list;
+    list->isEntry = 0;
+    list->isExternal = 0;
+    if (type == ENTRY){
+        list->type = strDuplicate("entry");
+        list->isEntry = 1;
+        list->ARE = ARE_RELOCATABLE;
+    } else if (type == EXTERN){
+        list->type = strDuplicate("extern");
+        list->isExternal = 1;
+        list->ARE = ARE_EXTERNAL;
+    } else if (type == DEFINE){
+        list->ARE = ARE_ABSOLUTE;
+    } else if (type == INSTRUCTION){
+        list->ARE = ARE_RELOCATABLE;
+    }
+        return list;
 }
 
-/* searches for element, returns pointer if element found */
-struct list *search_by_name(struct list *listHead, char *string) {
+/* searches for list element, returns pointer if element found */
+struct list *getElementByName(struct list *listHead, char *string) {
     struct list *current = listHead;
     while (current != NULL) {
         if (current->name != NULL && strcmp(current->name, string) == 0)
@@ -99,7 +114,8 @@ struct list *search_by_name(struct list *listHead, char *string) {
     return NULL;
 }
 
-struct macros_list *search_macros_by_name(struct macros_list *listHead, char *string) {
+
+struct macros_list *getMacroByName(struct macros_list *listHead, char *string) {
     struct macros_list *current = listHead;
     while (current != NULL) {
         if (current->name != NULL && strcmp(current->name, string) == 0)
@@ -108,6 +124,7 @@ struct macros_list *search_macros_by_name(struct macros_list *listHead, char *st
     }
     return NULL;
 }
+
 
 
 

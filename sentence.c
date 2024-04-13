@@ -40,7 +40,7 @@ int getOpValue (char *op, list *symbols){
         if (op[0] == '-' || op[0] == '+')
             return atoi(op);
     } else if (type == LABEL_OP) { /* label address or constant value*/
-        if ((symbol = search_by_name(symbols, op)) != NULL)
+        if ((symbol = getElementByName(symbols, op)) != NULL)
             return symbol->value;
         else
             return UNKNOWN_OPERAND;
@@ -51,7 +51,7 @@ int getOpValue (char *op, list *symbols){
         if (isNumber(op))
             return atoi(op);
         if (isalpha(op[0])) {
-            if ((symbol = search_by_name(symbols, op)) != NULL)
+            if ((symbol = getElementByName(symbols, op)) != NULL)
                 return symbol->value;
             else
                 return UNKNOWN_OPERAND;
@@ -64,7 +64,6 @@ int getOpValue (char *op, list *symbols){
 
 SentenceType getSentence(opcode_table *opcodes, char *token){
     token = deleteWhiteSpaces(token);
-
     if (token[0] == ';') /* comment */
         return COMMENT;
     else if (token [0] == '\0') /* empty */

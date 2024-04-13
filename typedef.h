@@ -8,7 +8,7 @@ typedef enum {
     SYMBOL_LIST,
     MACROS_LIST,
     WORD_LIST
-} DataType;
+} ListType;
 
 typedef enum {
     COMMENT,
@@ -30,3 +30,22 @@ typedef enum {
     ARRAY_INDEX,
     NUMBER_OP
 } OperandType;
+
+/* errors */
+typedef enum {
+    UNKNOWN_OPERAND = (-1),
+    ILLEGAL_OPERAND = (-2),
+    UNKNOWN_OPERATOR = (-3),
+    UNDEFINED_ENTRY = (-4),
+    MULTIPLE_LABEL = (-5),
+    EXTRANEOUS_TEXT = (-6),
+    ILLEGAL_STRING_DATA = (-7),
+    NOT_A_NUMBER = (-8),
+    ILLEGAL_COMMA = (-9),
+    UNKNOWN_REGISTER = (-10),
+    MULTIPLE_CONS_COMMAS = (-11),
+    MISSING_COMMA = (-12),
+    REG_DOES_NOT_EXIST = (-13),
+    ILLEAGL_LABEL_NAME = (-14),
+    TOO_LONG = (-15)
+} ErrorCode;
