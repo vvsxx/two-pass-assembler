@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     }
 
     free(opcodes);
+
     return 0;
 }
 

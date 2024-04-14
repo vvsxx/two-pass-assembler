@@ -101,7 +101,8 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     } else if (type == INSTRUCTION){
         list->ARE = ARE_RELOCATABLE;
     }
-    list->addresses = safeMalloc(sizeof (int));
+    list->addresses = NULL;
+    list->addresses_size = 0;
         return list;
 }
 

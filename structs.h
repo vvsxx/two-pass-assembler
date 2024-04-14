@@ -17,6 +17,7 @@ struct list {
     int isEntry;
     int isExternal;
     int *addresses;
+    int addresses_size;
     struct list *next;
 };
 

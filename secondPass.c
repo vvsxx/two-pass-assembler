@@ -7,7 +7,7 @@ void processDataDirective(char *token, image *img, list *symbols);
 void codeOpValue(char *op, image *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, image *img, int pos);
 word * createInstructionWord(image *img);
-void addAddress(int *arr, int address);
+void addAddress(int **arr, int *size, int address);
 
 int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
@@ -102,8 +102,8 @@ int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols
 /* codes a certain number of words depending on the operand and addressing mode */
 void codeWords(char *op, image *img, list *symbols, int pos){
     int *word = img->code->binary;
-    int addr_mode, ARE, value;
-    char *label, *index;
+    int addr_mode, ARE, value = 0;
+    char *label, *index, *c;
     list *symbol;
     addr_mode = getAddressingMode(op);
     /* operand is address of label */
@@ -131,18 +131,22 @@ void codeWords(char *op, image *img, list *symbols, int pos){
         decimalToBinary(value, &word[pos], 4);
 
     } else if (addr_mode == INDEXED_MODE){ /* LABEL[x] */
-        label = strdup(op); /* get array name */
-        index = strchr(label, '['); /* get array index */
-        index[strlen(index) - 1] = '\0'; /* clean */
-        index[0] = '\0'; /* clean */
+        label = strDuplicate(op); /* get array name */
+        index = strDuplicate(strchr(label, '[')); /* get array index */
+        if (index[strlen(index) - 1] == ',')
+            index[strlen(index) - 2] = '\0'; /* clean */
+        else
+            index[strlen(index) - 1] = '\0'; /* clean */
         index++; /* clean */
+        c = strchr(label, '[');
+        (*c) = '\0';
         symbol = getElementByName(symbols, label);
         value = getOpValue(label, symbols); /* get array address */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
         ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
         decimalToBinary(ARE, word, 2); /* code ARE */
         if ((symbol = getElementByName(symbols, label)) != NULL && symbol->isExternal)
-            addAddress(symbol->addresses, img->IC);
+            addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
         img->IC++;
         /* create next word */
         img->code = createWordNode(img->code, img->IC);
@@ -151,10 +155,13 @@ void codeWords(char *op, image *img, list *symbols, int pos){
         value = getOpValue(index, symbols); /* get index value */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code index value */
         if ((symbol = getElementByName(symbols, index)) != NULL && symbol->isExternal)
-            addAddress(&symbol->addresses, img->IC);
+            addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
+        free(label);
+        index--;
+        free(index);
     }
     if ((symbol = getElementByName(symbols, op)) != NULL && symbol->isExternal)
-        addAddress(&symbol->addresses, img->IC);
+        addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
 
 }
 
@@ -177,6 +184,7 @@ char * codeAddressingMode(char *op, image *img, int pos){
 
 /* processing data directive line */
 void processDataDirective(char *token, image *img, list *symbols) {
+    list *symbol;
     if (strcmp(token, ".string") == 0) {
         token = strtok(NULL, " ");
         token = strchr(token, '\"');
@@ -197,6 +205,8 @@ void processDataDirective(char *token, image *img, list *symbols) {
             img->DC = img->data != NULL ? img->data->address + 1 : 1;
             img->data = createWordNode(img->data, img->DC);
             decimalToBinary(getOpValue(token, symbols), img->data->binary, WORD_L);
+            if ((symbol = getElementByName(symbols, token)) != NULL && symbol->isExternal)
+                addAddress(&symbol->addresses, &symbol->addresses_size, img->DC + img->IC);
             if (img->data_h == NULL)
                 img->data_h= img->data;
         }
@@ -241,13 +251,22 @@ void writeObject(image *img, char *filename){
 
 
 
-void addAddress(int *arr, int address) {
-
+void addAddress(int **arr, int *size, int address) {
+    int newSize;
+    newSize = (*size) + 1;
+    *arr = realloc(*arr, newSize);
+    if (*arr == NULL) {
+        return;
+    }
+    (*size) = newSize;
+    (*arr)[newSize - 1] = address;
 }
 
 
+
+
 int createEntries(list *labels, char *fileName){
-    int isCorrect = 1;
+    int isCorrect = 1, i;
     list *head;
     char ent_fileName[strlen(fileName)+1], ext_fileName[strlen(fileName)+1];
     FILE *ent = NULL, *ext = NULL;
@@ -260,7 +279,9 @@ int createEntries(list *labels, char *fileName){
         if (head->isExternal) {
             if (ext == NULL)
                 ext = openFile(ext_fileName, "w");
-            fprintf(ext, "%s\t%.4d\n",head->name,head->value);
+            for (i = 0; i < head->addresses_size; ++i) {
+                fprintf(ext, "%s\t%.4d\n",head->name, head->addresses[i]);
+            }
         }
         if (head->isEntry) {
             if (strcmp(head->type,"entry") != 0) {
