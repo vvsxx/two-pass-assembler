@@ -100,11 +100,38 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
+int isLegalName(char *name, opcode_table *opcodes, list *symbols){
+    int i;
+    list *head;
+    if (strlen(name) > LABEL_LENGTH)
+        return TOO_LONG;
+    if (!isalpha(name[0]))
+        return ILLEAGL_LABEL_NAME;
+    for (i = 1; i < strlen(name); ++i) {
+        if (!isalpha(name[i]) && !isdigit(name[i]))
+            return ILLEAGL_LABEL_NAME;
+    }
+    for (i = 0; i < MAX_OPERATORS; ++i) {
+        if (strcmp(name, opcodes->name[i]) == 0)
+            return ILLEAGL_LABEL_NAME;
+    }
+    for (i = 0; i < MAX_REGISTERS; ++i) {
+        if (strcmp(name, opcodes->registerNames[i]) == 0)
+            return ILLEAGL_LABEL_NAME;
+    }
+    return 0;
+}
 
 list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
     int opcode;
+    int errorCheck;
     list *current, *tmp;
     labelName[strlen(labelName)-1] = '\0';
+    if ((errorCheck = isLegalName(labelName, opcodes, labels_head)) != 0){
+        (*isCorrect) = 0;
+        printError(errorCheck, lineNum);
+    }
+
     if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
         if (strcmp(tmp->type, "entry") != 0) {
             printError(MULTIPLE_LABEL, lineNum);

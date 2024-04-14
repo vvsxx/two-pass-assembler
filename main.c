@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
     
     if (argc < 2) {
-        printf("too few arguments, please enter name of file\n");
+        printf("too few arguments, please enter al least 1 filename\n");
         return 1;
     }
 
