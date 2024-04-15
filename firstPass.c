@@ -8,7 +8,7 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
 int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
-    char *newFileName;
+    char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
     int IC = 100, DC = 0, lineNum = 0; /* counters */
     int isCorrect = 1; /* errors flag */
@@ -16,7 +16,6 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
     int opcode; /* opcode decimal value */
     SentenceType type;
     FILE *input;
-    newFileName = safeMalloc(sizeof (fileName) + sizeof (".am")); /* +.am */
     strcpy(newFileName, fileName);
     strcat(newFileName, ".am");
     input = openFile(newFileName, "r");
@@ -29,6 +28,8 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
         strcpy(buffer,line);
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " ,\t");
+        if (token == NULL)
+            continue;
         type = getSentence(opcodes, token);
         if (type == LABEL){ /* label declaration case */
             strcpy(labelName, token);
@@ -100,9 +101,8 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
-int isLegalName(char *name, opcode_table *opcodes, list *symbols){
+int isLegalName(char *name, opcode_table *opcodes){
     int i;
-    list *head;
     if (strlen(name) > LABEL_LENGTH)
         return TOO_LONG;
     if (!isalpha(name[0]))
@@ -127,7 +127,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
     int errorCheck;
     list *current, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if ((errorCheck = isLegalName(labelName, opcodes, labels_head)) != 0){
+    if ((errorCheck = isLegalName(labelName, opcodes)) != 0){
         (*isCorrect) = 0;
         printError(errorCheck, lineNum);
     }

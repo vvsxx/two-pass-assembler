@@ -1,33 +1,43 @@
 #include "header.h"
 
-/* functions accessible only from this file */
-void writeFile(FILE *file, FILE *outputFile, macros_list *macros_h);
-void buildTables(FILE *file, FILE *outputFile);
+/* functions accessible only from this inputFile */
+void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
+macros_list *buildTable(FILE *input);
 
 
-void preProcessor(char *filename){
+int preProcessor(char *filename){
     FILE *inputFile, *outputFile;
+    macros_list *macros_h = NULL;
+    char ch;
     char inputFileName[strlen(filename) + 4]; /* ".as/.am" + '\0' */
     char outputFileName[strlen(filename) + 4];
     /* prepare input/output files */
     strcpy(inputFileName,filename);
-    strcat(inputFileName, ".as");
+    strcat(inputFileName, ".as\0");
     inputFile = openFile(inputFileName, "r");
+    while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
+    if (ch == EOF)
+        return EMPTY_FILE;
+    rewind(inputFile);
     strcpy(outputFileName, filename);
-    strcat(outputFileName, ".am");
+    strcat(outputFileName, ".am\0");
+    macros_h = buildTable(inputFile);
     outputFile = openFile(outputFileName, "w");
-    buildTables(inputFile, outputFile);
-    fclose(inputFile);
+    rewind(inputFile);
+    writeFile(inputFile, outputFile, macros_h);
+    freeList(macros_h, MACROS_LIST);
     fclose(outputFile);
+    fclose(inputFile);
+    return 1;
 }
 
-void buildTables(FILE *file, FILE *outputFile) {
+macros_list *buildTable(FILE *input) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];
     char buffer[LINE_LENGTH];
     char *token;
     int newLine, i, isMacro = 0;
-    while (fgets(line, sizeof(line), file) != NULL) {
+    while (fgets(line, sizeof(line), input) != NULL) {
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
         token = strtok(line, " ,\t");
@@ -65,28 +75,27 @@ void buildTables(FILE *file, FILE *outputFile) {
         newLine = 1;
         i++;
     }
-    writeFile(file, outputFile, macros_h);
-    freeList(macros_h, MACROS_LIST);
+    return macros_h;
 }
 
-void writeFile(FILE *file, FILE *outputFile, macros_list *macros_h) {
+void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char line[LINE_LENGTH], buffer[LINE_LENGTH], *token; /* line processing */
     char *data;
     macros_list *macros = NULL;
-    int i = 0, macroDef = 0;
-    rewind(file);
-    while (fgets(line, sizeof(line), file) != NULL) {
+    int i, macroDec = 0;
+    while (fgets(line, sizeof(line), inputFile) != NULL) {
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
-        token = strtok(line, " ,\t");
-        if (token == NULL)
+        token = strtok(line, " \t");
+        if (token == NULL) /* empty line case */
             continue;
         if (strcmp(token, "mcr") == 0)
-            macroDef = 1;
+            macroDec = 1;
         if (strcmp(token, "endmcr") == 0) {
-            macroDef = 0;
+            macroDec = 0;
             continue;
         }
+
 
         if ((macros = getMacroByName(macros_h, token)) != NULL) { /* marco name found */
             i = 0;
@@ -96,10 +105,7 @@ void writeFile(FILE *file, FILE *outputFile, macros_list *macros_h) {
                 i++;
                 data = macros->data[i];
             }
-            continue;
-        }
-
-        if (!macroDef)
+        } else if (!macroDec)
             fprintf(outputFile, "%s\n", buffer);
     }
 }

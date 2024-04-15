@@ -26,10 +26,10 @@ int main(int argc, char *argv[]) {
         img->IC = 100;
         img->DC = 0;
 
-        preProcessor(argv[i]); /* deploy macros and create ".am" file */
-        if (firstPass(argv[i], symbols, opcodes))  /* fill data tables and code image */
-            if (secondPass(argv[i], img, opcodes, symbols)) /* convert to binary than to base4 secure and write files */
-                writeObject(img, argv[i]);
+        if(preProcessor(argv[i]) == SUCCESS) /* deploy macros and create ".am" file */
+            if (firstPass(argv[i], symbols, opcodes) == SUCCESS)  /* fill data tables and code image */
+                if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) /* convert to binary than to base4 secure and write files */
+                    writeObject(img, argv[i]);
 
 
         test(img);

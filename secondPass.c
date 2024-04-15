@@ -29,6 +29,8 @@ int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " ,\t");
+        if (token == NULL)
+            continue;
         sentence = getSentence(op_table, token);
         /* skip label declaration */
         if (sentence == LABEL) {

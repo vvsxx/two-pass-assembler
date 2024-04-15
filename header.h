@@ -41,7 +41,7 @@
 /* functions */
 FILE * openFile(char *fileName, char *mode);
 void *safeMalloc(size_t size);
-void preProcessor(char *filename);
+int preProcessor(char *filename);
 void getOpTable(opcode_table *table);
 struct list *getElementByName(struct list *listHead, char *string);
 struct macros_list *getMacroByName(struct macros_list *listHead, char *string);
