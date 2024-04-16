@@ -149,7 +149,10 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
     }
 
     if (type == DATA || type == STRING){
-        current->type = strDuplicate("data");
+        if (current->type == NULL)
+            current->type = strDuplicate("data");
+        else
+            strcpy(current->type, "data");
         current->ARE = ARE_RELOCATABLE;
         current->value = *DC;
         if (type == STRING) {

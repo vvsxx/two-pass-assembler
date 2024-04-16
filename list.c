@@ -28,11 +28,12 @@ void freeWordList(struct word *head) {
 }
 
 void freeMacList(struct macros_list *head) {
+    struct macros_list *temp;
     while (head != NULL) {
-        struct macros_list *temp = head;
+        temp = head;
         head = head->next;
         free(temp->name);
-        for (int i = 0; i < temp->lines; ++i) {
+        for (int i = 0; i <= temp->lines; ++i) {
             free(temp->data[i]);
         }
         free(temp->data);
@@ -41,7 +42,6 @@ void freeMacList(struct macros_list *head) {
 }
 
 void freeList(void *node, ListType type) {
-    void *tmp;
     struct list *sym_p;
     struct word *word_p;
     struct macros_list *mac_p;
@@ -80,15 +80,15 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     token = deleteWhiteSpaces(token);
 
     list->name = strDuplicate(token);
+    list->isEntry = 0;
+    list->isExternal = 0;
 
     if (type == DEFINE) {
         token = strtok(NULL, "=");
         list->value = atoi(token);
         list->type = strDuplicate("mdefine");
-    }
-    list->isEntry = 0;
-    list->isExternal = 0;
-    if (type == ENTRY){
+        list->ARE = ARE_ABSOLUTE;
+    } else if (type == ENTRY){
         list->type = strDuplicate("entry");
         list->isEntry = 1;
         list->ARE = ARE_RELOCATABLE;
@@ -97,8 +97,6 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
         list->isExternal = 1;
         list->ARE = ARE_EXTERNAL;
         list->value = 0;
-    } else if (type == DEFINE){
-        list->ARE = ARE_ABSOLUTE;
     } else if (type == INSTRUCTION){
         list->ARE = ARE_RELOCATABLE;
     }

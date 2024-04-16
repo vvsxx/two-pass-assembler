@@ -108,7 +108,7 @@ char *deleteWhiteSpaces(char *token){
 }
 
 /* returns non zero value in case if token is number */
-int isNumber(char *token){
+int isNumber(const char *token){
     if(token[0] == '-' || token[0] == '+')
         return isdigit(token[1]);
     return isdigit(token[0]);
@@ -165,13 +165,15 @@ void writeObjFile(mem_img *img, char *filename){
         fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
         tmp = tmp->next;
     }
+    free(newName);
 }
 
 /* write .ent & .ext file */
 int createEntFile(list *labels, char *fileName){
     int isCorrect = 1, i;
     list *head;
-    char ent_fileName[strlen(fileName) + 5], ext_fileName[strlen(fileName) + 5]; /* ".ent/.ext" + '\0' */;
+    char ent_fileName[strlen(fileName) + 5]; /* .ent + '\0' */
+    char ext_fileName[strlen(fileName) + 5]; /* .ext + '\0' */
     FILE *ent = NULL, *ext = NULL;
     strcpy(ent_fileName, fileName);
     strcpy(ext_fileName, fileName);

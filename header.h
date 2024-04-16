@@ -61,7 +61,7 @@ char *strDuplicate(const char *src);
 void freeList(void *node, ListType type);
 SentenceType getSentence(opcode_table *opcodes, char *token);
 char *deleteWhiteSpaces(char *token);
-int isNumber(char *token);
+int isNumber(const char *token);
 OperandType getOpType(char *token);
 void cryptWords(word *wrd);
 void writeObjFile(mem_img *img, char *filename);

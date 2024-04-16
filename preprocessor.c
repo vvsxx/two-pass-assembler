@@ -52,12 +52,11 @@ macros_list *buildTable(FILE *input) {
                     macros = macros->next;
                 } else { /* list is empty  */
                     macros = safeMalloc(sizeof(macros_list));
-                }
-                if (macros_h == NULL)
                     macros_h = macros;
+                }
+
                 macros->name = strDuplicate(token);
                 macros->data = (char **) safeMalloc(sizeof(char *));
-                macros->data[i] = (char *) safeMalloc(LINE_LENGTH * sizeof(char));
                 macros->lines = i+1;
                 token = strtok(NULL, " ,\t");
                 i--;
