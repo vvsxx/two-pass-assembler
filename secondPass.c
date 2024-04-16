@@ -2,24 +2,23 @@
 
 word * createWordNode(struct word *node, int addr);
 int getOpValue (char *op, list *symbols);
-void codeWords(char *op, image *img, list *symbols, int pos);
-void processDataDirective(char *token, image *img, list *symbols);
-void codeOpValue(char *op, image *img, list *symbols, int pos);
-char * codeAddressingMode(char *op, image *img, int pos);
-word * createInstructionWord(image *img);
+void codeWords(char *op, mem_img *img, list *symbols, int pos);
+void processDataDirective(char *token, mem_img *img, list *symbols);
+void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
+char * codeAddressingMode(char *op, mem_img *img, int pos);
+word * createInstructionWord(mem_img *img);
 void addAddress(int **arr, int *size, int address);
 
-int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols){
+int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
     char line[LINE_LENGTH], *token; /* line processing */
-    char *amFile;
+    char amFile[strlen(fileName) + 4]; /* ".am" + '\0' */
     char *src, *dst; /* operands */
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
     int isCorrect = 1;
     list *symbol;
-    amFile = safeMalloc(sizeof (fileName) + 3); /* +.am */
     strcpy(amFile, fileName);
     strcat(amFile, ".am");
     SentenceType sentence;
@@ -94,15 +93,13 @@ int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols
     /* create encrypted base 4 values */
     cryptWords(img->code_h);
     cryptWords(img->data_h);
-    isCorrect = createEntries(symbols, amFile);
-    free(amFile);
     fclose(input);
     return isCorrect;
 }
 
 
 /* codes a certain number of words depending on the operand and addressing mode */
-void codeWords(char *op, image *img, list *symbols, int pos){
+void codeWords(char *op, mem_img *img, list *symbols, int pos){
     int *word = img->code->binary;
     int addr_mode, ARE, value = 0;
     char *label, *index, *c;
@@ -169,14 +166,14 @@ void codeWords(char *op, image *img, list *symbols, int pos){
 
 
 
-void codeOpValue(char *op, image *img, list *symbols, int pos){
+void codeOpValue(char *op, mem_img *img, list *symbols, int pos){
     img->code = createWordNode(img->code, img->IC);
     resetBits(img->code->binary, WORD_L);
     codeWords(op, img, symbols, pos);
     img->IC++;
 }
 
-char * codeAddressingMode(char *op, image *img, int pos){
+char * codeAddressingMode(char *op, mem_img *img, int pos){
     int adr_mode;
     op = strtok(NULL, " \t");
     adr_mode = getAddressingMode(op);
@@ -185,7 +182,7 @@ char * codeAddressingMode(char *op, image *img, int pos){
 }
 
 /* processing data directive line */
-void processDataDirective(char *token, image *img, list *symbols) {
+void processDataDirective(char *token, mem_img *img, list *symbols) {
     list *symbol;
     if (strcmp(token, ".string") == 0) {
         token = strtok(NULL, " ");
@@ -216,7 +213,7 @@ void processDataDirective(char *token, image *img, list *symbols) {
 }
 
 /* creates new instruction word */
-word * createInstructionWord(image *img){
+word * createInstructionWord(mem_img *img){
     if (img->code_h == NULL){ /* in case of first word in list set head pointer */
         img->code = createWordNode(img->code, img->IC);
         img->code_h = img->code;
@@ -227,8 +224,24 @@ word * createInstructionWord(image *img){
     return img->code;
 }
 
+void addAddress(int **arr, int *size, int address) {
+    int newSize;
+    newSize = (*size) + 1;
+    *arr = realloc(*arr, newSize);
+    if (*arr == NULL) {
+        return;
+    }
+    (*size) = newSize;
+    (*arr)[newSize - 1] = address;
+}
+
+void writeFiles(list *symbols, mem_img *img, char *filename){
+    createEntFile(symbols, filename);
+    writeObjFile(img, filename);
+}
+
 /* writes .obj file */
-void writeObject(image *img, char *filename){
+void writeObjFile(mem_img *img, char *filename){
     FILE *objFile;
     char *newName;
     int IC;
@@ -250,32 +263,15 @@ void writeObject(image *img, char *filename){
         tmp = tmp->next;
     }
 }
-
-
-
-void addAddress(int **arr, int *size, int address) {
-    int newSize;
-    newSize = (*size) + 1;
-    *arr = realloc(*arr, newSize);
-    if (*arr == NULL) {
-        return;
-    }
-    (*size) = newSize;
-    (*arr)[newSize - 1] = address;
-}
-
-
-
-
-int createEntries(list *labels, char *fileName){
+int createEntFile(list *labels, char *fileName){
     int isCorrect = 1, i;
     list *head;
-    char ent_fileName[strlen(fileName)+1], ext_fileName[strlen(fileName)+1];
+    char ent_fileName[strlen(fileName) + 5], ext_fileName[strlen(fileName) + 5]; /* ".ent/.ext" + '\0' */;
     FILE *ent = NULL, *ext = NULL;
-    strncpy(ent_fileName, fileName, strlen(fileName) - 2);
-    strncpy(ext_fileName, fileName, strlen(fileName) - 2);
-    strcpy(strrchr(ent_fileName, '.'), ".ent");
-    strcpy(strrchr(ext_fileName, '.'), ".ext");
+    strcpy(ent_fileName, fileName);
+    strcpy(ext_fileName, fileName);
+    strcat(ent_fileName, ".ent");
+    strcat(ext_fileName, ".ext");
     head = labels;
     while (head != NULL){
         if (head->isExternal) {

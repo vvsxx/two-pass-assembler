@@ -95,8 +95,6 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
             macroDec = 0;
             continue;
         }
-
-
         if ((macros = getMacroByName(macros_h, token)) != NULL) { /* marco name found */
             i = 0;
             data = macros->data[i];

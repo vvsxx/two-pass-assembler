@@ -5,12 +5,12 @@ int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
-int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
+int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int ram){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
-    int IC = 100, DC = 0, lineNum = 0; /* counters */
+    int IC = 100, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
     int isCorrect = 1; /* errors flag */
     int *pIC = &IC, *pDC = &DC, *p_isCorrect = &isCorrect; /* pointers */
     int opcode; /* opcode decimal value */
@@ -77,6 +77,8 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes){
             tmp->value += IC;
         tmp = tmp->next;
     }
+    if ((mem_counter = (IC - 100) + DC) > ram)
+        isCorrect = mem_counter;
     free(buffer);
     fclose(input);
     return isCorrect;

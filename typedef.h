@@ -1,7 +1,7 @@
 typedef struct macros_list macros_list;
 typedef struct opcode_table opcode_table; /* operators and binary values */
 typedef struct list list;
-typedef struct image image;
+typedef struct memory_image mem_img;
 typedef struct word word;
 
 typedef enum {
@@ -33,7 +33,6 @@ typedef enum {
 
 /* errors */
 typedef enum {
-    SUCCESS = 1,
     UNKNOWN_OPERAND = (-1),
     ILLEGAL_OPERAND = (-2),
     UNKNOWN_OPERATOR = (-3),
@@ -49,5 +48,6 @@ typedef enum {
     REG_DOES_NOT_EXIST = (-13),
     ILLEAGL_LABEL_NAME = (-14),
     TOO_LONG = (-15),
-    EMPTY_FILE = (-16)
+    EMPTY_FILE = (-16),
+    OUT_OF_MEMORY = (-17)
 } ErrorCode;

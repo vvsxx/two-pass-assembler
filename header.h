@@ -25,6 +25,7 @@
 /* checks */
 #define IS_ALLOWED(modes_table, opcode, mode) (modes_table[opcode][mode] == 1 ? 1 : 0)  /* checks that addressing mode is allowed for this opcode*/
 #define IS_REGISTER(num) ((num >= 0 && num <= 7) ? 1 : 0) /* checks that addressing mode is allowed for this opcode*/
+#define SUCCESS 1
 
 /* addressing modes */
 #define IMMEDIATE 0
@@ -47,11 +48,11 @@ struct list *getElementByName(struct list *listHead, char *string);
 struct macros_list *getMacroByName(struct macros_list *listHead, char *string);
 void decimalToBinary(int decimal, int *binary, int array_size);
 void binaryToEncrypted4(const int *binary, char *result);
-int firstPass(char *fileName, list  *symbols, opcode_table *opcodes);
-int secondPass(char *fileName, image *img, opcode_table *op_table, list *symbols);
+int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int ram);
+int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols);
 list  * createSymbol(struct list  *list, char *token, char *line, SentenceType type);
 void printError(int errorCode, int line);
-int createEntries(list *labels, char *fileName);
+int createEntFile(list *labels, char *fileName);
 int getOpcode(opcode_table *opcodes, char *token);
 int getAddressingMode (char *operand);
 void resetBits(int *arr, int size);
@@ -62,4 +63,5 @@ char *deleteWhiteSpaces(char *token);
 int isNumber(char *token);
 OperandType getOpType(char *token);
 void cryptWords(word *wrd);
-void writeObject(image *img, char *filename);
+void writeObjFile(mem_img *img, char *filename);
+void writeFiles(list *symbols, mem_img *img, char *filename);

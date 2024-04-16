@@ -37,7 +37,7 @@ struct word {
     struct word *next;
 };
 
-struct image {
+struct memory_image {
     int IC; /* instruction counter */
     int DC; /* data counter */
     struct word *code, *code_h;

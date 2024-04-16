@@ -1,12 +1,13 @@
 #include "header.h"
-void test(struct image *img);
+void test(mem_img *img);
 
 
 int main(int argc, char *argv[]) {
-    int i;
+    int i, errorCode;
+    int ram = 4096;
     opcode_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
-    image *img; /* contains binary code */
+    mem_img *img; /* contains binary code */
 
     /* check that at least one argument had been received */
 
@@ -21,15 +22,20 @@ int main(int argc, char *argv[]) {
 
     /* run assembler for each file */
     for (i = 1; i < argc; ++i) {
-        img = safeMalloc(sizeof (struct image));
+        img = safeMalloc(sizeof (struct memory_image));
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
         img->IC = 100;
         img->DC = 0;
 
-        if(preProcessor(argv[i]) == SUCCESS) /* deploy macros and create ".am" file */
-            if (firstPass(argv[i], symbols, opcodes) == SUCCESS)  /* fill data tables and code image */
-                if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) /* convert to binary than to base4 secure and write files */
-                    writeObject(img, argv[i]);
+        if((errorCode = preProcessor(argv[i])) == SUCCESS) { /* deploy macros and create ".am" file */
+            if ((errorCode = firstPass(argv[i], symbols, opcodes, ram)) == SUCCESS) {  /* fill data tables and code mem_img */
+                if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) {  /* convert to binary than to base4 secure and write files */
+                    writeFiles(symbols, img, argv[i]);
+                }
+            } else {
+                printError(OUT_OF_MEMORY, errorCode);
+            }
+        }
 
 
         test(img);
@@ -75,6 +81,8 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"The label name repeats an existing one in line %d\n", line); break;
         case TOO_LONG:
             fprintf(stdout,"Too long label name in line %d\n", line); break;
+        case OUT_OF_MEMORY:
+            fprintf(stdout,"Not enough memory - %d / 25\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }
@@ -82,7 +90,7 @@ void printError(ErrorCode errorCode, int line){
 
 
 
-void test(struct image *img){
+void test(mem_img *img){
     int i, counter, int_val, j, error;
     char line[LINE_LENGTH], *addr, *val, tmp[2];
     char encrypted[10];
