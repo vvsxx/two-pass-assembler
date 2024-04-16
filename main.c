@@ -4,7 +4,7 @@ void test(mem_img *img);
 
 int main(int argc, char *argv[]) {
     int i, errorCode;
-    int ram = 4096;
+    int memory = 4096;
     opcode_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
@@ -28,12 +28,10 @@ int main(int argc, char *argv[]) {
         img->DC = 0;
 
         if((errorCode = preProcessor(argv[i])) == SUCCESS) { /* deploy macros and create ".am" file */
-            if ((errorCode = firstPass(argv[i], symbols, opcodes, ram)) == SUCCESS) {  /* fill data tables and code mem_img */
+            if ((errorCode = firstPass(argv[i], symbols, opcodes, memory)) == SUCCESS) {  /* fill data tables and code mem_img */
                 if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) {  /* convert to binary than to base4 secure and write files */
                     writeFiles(symbols, img, argv[i]);
                 }
-            } else {
-                printError(OUT_OF_MEMORY, errorCode);
             }
         }
 
@@ -82,7 +80,7 @@ void printError(ErrorCode errorCode, int line){
         case TOO_LONG:
             fprintf(stdout,"Too long label name in line %d\n", line); break;
         case OUT_OF_MEMORY:
-            fprintf(stdout,"Not enough memory - %d / 25\n", line); break;
+            fprintf(stdout,"Not enough memory - %d / 4096\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

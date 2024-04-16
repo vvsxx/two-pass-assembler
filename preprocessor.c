@@ -1,6 +1,6 @@
 #include "header.h"
 
-/* functions accessible only from this inputFile */
+/* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
 macros_list *buildTable(FILE *input);
 
@@ -31,6 +31,7 @@ int preProcessor(char *filename){
     return 1;
 }
 
+/* function creates macro table */
 macros_list *buildTable(FILE *input) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];

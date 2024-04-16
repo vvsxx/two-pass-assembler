@@ -49,5 +49,7 @@ typedef enum {
     ILLEAGL_LABEL_NAME = (-14),
     TOO_LONG = (-15),
     EMPTY_FILE = (-16),
-    OUT_OF_MEMORY = (-17)
+    OUT_OF_MEMORY = (-17),
+    TOO_LONG_LINE = (-18),
+
 } ErrorCode;

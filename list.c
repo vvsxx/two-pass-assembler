@@ -2,12 +2,13 @@
 
 
 /* free memory */
-void freeSymList(struct list *p){
-    void *tmp;
+void freeSymList(struct list *p) {
+    struct list *tmp;
     while (p != NULL) {
         tmp = p->next;
         free(p->name);
         free(p->type);
+        free(p->addresses);
         free(p);
         p = tmp;
     }

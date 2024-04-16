@@ -1,5 +1,6 @@
 #include "header.h"
 
+/* the function is used to catch errors when opening a file */
 FILE * openFile(char *fileName, char *mode){
     FILE *file;
     file = fopen(fileName, mode);
@@ -22,14 +23,14 @@ FILE * openFile(char *fileName, char *mode){
 void *safeMalloc(size_t size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
-        fprintf(stderr, "Allocating memory error\n");
+        fprintf(stdout, "Allocating memory error\n");
         exit(EXIT_FAILURE);
     }
     return ptr;
 }
 
 
-
+/* converts a decimal value to binary and stores it in "array_size" bits in the "binary" array  */
 void decimalToBinary(int decimal, int *binary, int array_size){
     int i, tmp = decimal;
     resetBits(binary, array_size);
@@ -56,8 +57,7 @@ void decimalToBinary(int decimal, int *binary, int array_size){
     }
 }
 
-
-
+/* converts the binary value to a base 4 encrypted value and writes it to the "result" array */
 void binaryToEncrypted4(const int *binary, char *result){
     int i,j,res = 6;
     int base4[4][2] = {{0,0},
@@ -87,7 +87,7 @@ void resetBits(int *arr, int size){
 }
 
 
-/* differs from the standard strdup one in that it uses safeMalloc */
+/* differs from the standard strdup() in that it uses safeMalloc */
 char *strDuplicate(const char *src) {
     size_t len = strlen(src) + 1;
     char *dst = safeMalloc(len);
@@ -121,4 +121,87 @@ void cryptWords(word *wrd){
         binaryToEncrypted4(tmp->binary, tmp->secure4);
         tmp = tmp->next;
     }
+}
+
+/* saves the address where the symbol that was declared as external was used
+ * for each new address allocates additional space in the symbol.addresses array */
+void addAddress(int **arr, int *size, int address) {
+    int newSize = (*size) + 1;
+    int *tmp = realloc(*arr, newSize * sizeof(int));
+    if (tmp == NULL) {
+        fprintf(stdout, "Allocating memory error\n");
+        exit(EXIT_FAILURE);
+    }
+    *arr = tmp;
+    (*arr)[newSize - 1] = address;
+    *size = newSize;
+}
+
+/* calls functions to write .ent, .ext, & .obj files */
+void writeFiles(list *symbols, mem_img *img, char *filename){
+    createEntFile(symbols, filename);
+    writeObjFile(img, filename);
+}
+
+/* writes .obj file */
+void writeObjFile(mem_img *img, char *filename){
+    FILE *objFile;
+    char *newName;
+    int IC;
+    word *tmp;
+    newName = safeMalloc(sizeof (filename) + 4); /* +.ob + \0 */
+    strcpy(newName, filename);
+    strcat(newName, ".ob\0");
+    objFile = openFile(newName, "w");
+    IC = img->IC-FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
+    fprintf(objFile, "%d %d\n", IC, img->DC);
+    tmp = img->code_h;
+    while (tmp != NULL){
+        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+        tmp = tmp->next;
+    }
+    tmp = img->data_h;
+    while (tmp != NULL){
+        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+        tmp = tmp->next;
+    }
+}
+
+/* write .ent & .ext file */
+int createEntFile(list *labels, char *fileName){
+    int isCorrect = 1, i;
+    list *head;
+    char ent_fileName[strlen(fileName) + 5], ext_fileName[strlen(fileName) + 5]; /* ".ent/.ext" + '\0' */;
+    FILE *ent = NULL, *ext = NULL;
+    strcpy(ent_fileName, fileName);
+    strcpy(ext_fileName, fileName);
+    strcat(ent_fileName, ".ent");
+    strcat(ext_fileName, ".ext");
+    head = labels;
+    while (head != NULL){
+        if (head->isExternal) {
+            if (ext == NULL)
+                ext = openFile(ext_fileName, "w");
+            for (i = 0; i < head->addresses_size; ++i) {
+                fprintf(ext, "%s\t%.4d\n",head->name, head->addresses[i]);
+            }
+        }
+        if (head->isEntry) {
+            if (strcmp(head->type,"entry") != 0) {
+                if (ent == NULL)
+                    ent = openFile(ent_fileName, "w");
+                fprintf(ent, "%s\t%.4d\n",head->name,head->value);
+            } else {
+                printError(UNDEFINED_ENTRY, 0);
+                isCorrect = 0;
+            }
+        }
+        head = head->next;
+    }
+
+    if (ent != NULL)
+        fclose(ent);
+    if (ext != NULL)
+        fclose(ext);
+    return isCorrect;
 }
