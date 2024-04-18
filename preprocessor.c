@@ -16,13 +16,15 @@ int preProcessor(char *filename, opcode_table *opcodes){
     strcat(inputFileName, ".as\0");
     inputFile = openFile(inputFileName, "r");
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
+    /* if file is empty, stop here */
     if (ch == EOF)
         return EMPTY_FILE;
+
     rewind(inputFile);
     strcpy(outputFileName, filename);
     strcat(outputFileName, ".am\0");
-    macros_h = buildTable(inputFile, opcodes);
     outputFile = openFile(outputFileName, "w");
+    macros_h = buildTable(inputFile, opcodes); /* build macros table */
     rewind(inputFile);
     writeFile(inputFile, outputFile, macros_h);
     freeList(macros_h, MACROS_LIST);
@@ -38,8 +40,9 @@ macros_list *buildTable(FILE *input, opcode_table *opcodes) {
     char buffer[LINE_LENGTH];
     char *token;
     int isCorrect = SUCCESS;
-    int newLine, i, isMacro = 0;
+    int i, lineNum = 0, newLine, isMacro = 0;
     while (fgets(line, sizeof(line), input) != NULL) {
+        lineNum++;
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
         token = strtok(line, " ,\t");
@@ -55,9 +58,9 @@ macros_list *buildTable(FILE *input, opcode_table *opcodes) {
                     macros = safeMalloc(sizeof(macros_list));
                     macros_h = macros;
                 }
-                if ((isCorrect = isLegalName(token, opcodes)) != 0){
+                if ((isCorrect = isSavedWord(token, opcodes)) != 0){
                     isCorrect = INCORRECT;
-                    printError(ILLEGAL_MACROS_NAME, 0);
+                    printError(ILLEGAL_MACRO_NAME, lineNum);
                 }
                 macros->name = strDuplicate(token);
                 macros->data = (char **) safeMalloc(sizeof(char *));

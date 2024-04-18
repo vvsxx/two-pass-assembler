@@ -53,5 +53,5 @@ typedef enum {
     OUT_OF_MEMORY = (-17),
     TOO_LONG_LINE = (-18),
     MISSING_OPERAND = (-19),
-    ILLEGAL_MACROS_NAME = (-20),
+    ILLEGAL_MACRO_NAME = (-20),
 } ErrorCode;

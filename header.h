@@ -75,3 +75,4 @@ int checkLine(char *line);
 void addAddress(int **arr, int *size, int address);
 int getOpValue (char *op, list *symbols);
 int isLegalName(char *name, opcode_table *opcodes);
+int isSavedWord(char *name, opcode_table *opcodes);

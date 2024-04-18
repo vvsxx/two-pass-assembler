@@ -229,6 +229,19 @@ int checkLine(char *line){
     return SUCCESS;
 }
 
+int isSavedWord(char *name, opcode_table *opcodes){
+    int i;
+    for (i = 0; i < MAX_OPERATORS; ++i) {
+        if (strcmp(name, opcodes->name[i]) == 0)
+            return ILLEGAL_LABEL_NAME;
+    }
+    for (i = 0; i < MAX_REGISTERS; ++i) {
+        if (strcmp(name, opcodes->registerNames[i]) == 0)
+            return ILLEGAL_LABEL_NAME;
+    }
+    return 0;
+}
+
 int isLegalName(char *name, opcode_table *opcodes){
     int i;
     if (strlen(name) > LABEL_LENGTH)
@@ -239,13 +252,5 @@ int isLegalName(char *name, opcode_table *opcodes){
         if (!isalpha(name[i]) && !isdigit(name[i]))
             return ILLEGAL_LABEL_NAME;
     }
-    for (i = 0; i < MAX_OPERATORS; ++i) {
-        if (strcmp(name, opcodes->name[i]) == 0)
-            return ILLEGAL_LABEL_NAME;
-    }
-    for (i = 0; i < MAX_REGISTERS; ++i) {
-        if (strcmp(name, opcodes->registerNames[i]) == 0)
-            return ILLEGAL_LABEL_NAME;
-    }
-    return 0;
+    return isSavedWord(name, opcodes);
 }

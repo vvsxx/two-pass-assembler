@@ -84,6 +84,8 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"Missing operand in line - %d\n", line); break;
         case ILLEGAL_COMMA:
             fprintf(stdout,"Illegal comma in line - %d\n", line); break;
+        case ILLEGAL_MACRO_NAME:
+            fprintf(stdout,"Illegal macro name in line - %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }
