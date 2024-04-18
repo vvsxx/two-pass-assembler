@@ -123,7 +123,7 @@ void cryptWords(word *wrd){
     }
 }
 
-/* saves the address where the symbol that was declared as external was used
+/* saves the memory address where the symbol that was declared as external was used
  * for each new address allocates additional space in the symbol.addresses array */
 void addAddress(int **arr, int *size, int address) {
     int newSize = (*size) + 1;
@@ -177,8 +177,8 @@ int createEntFile(list *labels, char *fileName){
     FILE *ent = NULL, *ext = NULL;
     strcpy(ent_fileName, fileName);
     strcpy(ext_fileName, fileName);
-    strcat(ent_fileName, ".ent");
-    strcat(ext_fileName, ".ext");
+    strcat(ent_fileName, ".ent\0");
+    strcat(ext_fileName, ".ext\0");
     head = labels;
     while (head != NULL){
         if (head->isExternal) {
@@ -206,4 +206,46 @@ int createEntFile(list *labels, char *fileName){
     if (ext != NULL)
         fclose(ext);
     return isCorrect;
+}
+
+int checkLine(char *line){
+    char *tmp = line;
+    char lastChar = tmp[strlen(tmp)-1];
+    if (lastChar == ',')
+        return EXTRANEOUS_TEXT;
+    if (strlen(tmp) > LINE_LENGTH)
+        return TOO_LONG_LINE;
+    while (tmp[0] == ' ')
+        tmp++;
+    lastChar = tmp[0];
+    while (tmp[0] != '\0'){
+        while (tmp[0] == ' ')
+            tmp++;
+        if (lastChar == ',' && tmp[0] == ',')
+            return MULTIPLE_CONS_COMMAS;
+        lastChar = tmp[0];
+        tmp++;
+    }
+    return SUCCESS;
+}
+
+int isLegalName(char *name, opcode_table *opcodes){
+    int i;
+    if (strlen(name) > LABEL_LENGTH)
+        return TOO_LONG_NAME;
+    if (!isalpha(name[0]))
+        return ILLEGAL_LABEL_NAME;
+    for (i = 1; i < strlen(name); ++i) {
+        if (!isalpha(name[i]) && !isdigit(name[i]))
+            return ILLEGAL_LABEL_NAME;
+    }
+    for (i = 0; i < MAX_OPERATORS; ++i) {
+        if (strcmp(name, opcodes->name[i]) == 0)
+            return ILLEGAL_LABEL_NAME;
+    }
+    for (i = 0; i < MAX_REGISTERS; ++i) {
+        if (strcmp(name, opcodes->registerNames[i]) == 0)
+            return ILLEGAL_LABEL_NAME;
+    }
+    return 0;
 }

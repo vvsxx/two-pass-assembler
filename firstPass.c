@@ -5,12 +5,13 @@ int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
+
 int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
-    int IC = 100, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
+    int IC = FIRST_ADDRESS, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
     int isCorrect = 1; /* errors flag */
     int *pIC = &IC, *pDC = &DC, *p_isCorrect = &isCorrect; /* pointers */
     int opcode; /* opcode decimal value */
@@ -22,12 +23,18 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
     buffer = safeMalloc(sizeof (line));
     /* read each line from .am file */
     while (fgets(line, sizeof(line), input) != NULL){
+        token = deleteWhiteSpaces(line); /* used to check line correctness */
+        isCorrect = checkLine(token);
+        if (isCorrect != SUCCESS) {
+            printError(isCorrect, lineNum);
+            continue;
+        }
         memset(labelName, '\0', strlen(labelName));
         lineNum++;
         memset(buffer, '\0', strlen(buffer));
         strcpy(buffer,line);
         line[strcspn(line, "\n")] = '\0';
-        token = strtok(line, " ,\t");
+        token = strtok(line, " \t");
         if (token == NULL)
             continue;
         type = getSentence(opcodes, token);
@@ -67,7 +74,7 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
             }
         } else { /* Illegal case */
             printError(UNKNOWN_OPERATOR,lineNum);
-            isCorrect = 0;
+            isCorrect = INCORRECT;;
         }
     }
     /* add up counters */
@@ -77,9 +84,9 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
             tmp->value += IC;
         tmp = tmp->next;
     }
-    if ((mem_counter = (IC - 100) + DC) > memory) {
+    if ((mem_counter = (IC - FIRST_ADDRESS) + DC) > memory) {
         printError(OUT_OF_MEMORY, mem_counter);
-        isCorrect = 0;
+        isCorrect = INCORRECT;;
     }
     free(buffer);
     fclose(input);
@@ -90,40 +97,24 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
 int stringLine(char *token, int *isCorrect, int lineNum){
     int DC = 1;
     if (token[0] != '\"'){
-        (*isCorrect) = 0;
+        (*isCorrect) = INCORRECT;
         printError(ILLEGAL_STRING_DATA, lineNum);
     }
     token++;
-    while (strlen(token) > 1){
+    while (token[0] != '\"'){
         DC++;
         token++;
     }
     if (token[0] != '\"'){
-        (*isCorrect) = 0;
+        (*isCorrect) = INCORRECT;
         printError(ILLEGAL_STRING_DATA, lineNum);
     }
+    token = strtok(token, " \" ");
+    if (token != NULL){
+        (*isCorrect) = INCORRECT;
+        printError(EXTRANEOUS_TEXT, lineNum);
+    }
     return DC;
-}
-
-int isLegalName(char *name, opcode_table *opcodes){
-    int i;
-    if (strlen(name) > LABEL_LENGTH)
-        return TOO_LONG;
-    if (!isalpha(name[0]))
-        return ILLEAGL_LABEL_NAME;
-    for (i = 1; i < strlen(name); ++i) {
-        if (!isalpha(name[i]) && !isdigit(name[i]))
-            return ILLEAGL_LABEL_NAME;
-    }
-    for (i = 0; i < MAX_OPERATORS; ++i) {
-        if (strcmp(name, opcodes->name[i]) == 0)
-            return ILLEAGL_LABEL_NAME;
-    }
-    for (i = 0; i < MAX_REGISTERS; ++i) {
-        if (strcmp(name, opcodes->registerNames[i]) == 0)
-            return ILLEAGL_LABEL_NAME;
-    }
-    return 0;
 }
 
 list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
@@ -132,14 +123,14 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
     list *current, *tmp;
     labelName[strlen(labelName)-1] = '\0';
     if ((errorCheck = isLegalName(labelName, opcodes)) != 0){
-        (*isCorrect) = 0;
-        printError(errorCheck, lineNum);
+        (*isCorrect) = INCORRECT;
+        printError(ILLEGAL_LABEL_NAME, lineNum);
     }
 
     if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
         if (strcmp(tmp->type, "entry") != 0) {
             printError(MULTIPLE_LABEL, lineNum);
-            (*isCorrect) = 0;
+            (*isCorrect) = INCORRECT;
         } else {
             current = tmp;
         }
@@ -169,7 +160,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
         (*IC) += processInstruction(token, opcodes, opcode, lineNum) + 1;
     } else {
         printError(UNKNOWN_OPERATOR, lineNum);
-        *isCorrect = 0;
+        *isCorrect = INCORRECT;;
     }
     return labels_last;
 }
@@ -186,7 +177,7 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
         addressingMode = getAddressingMode(token);
         if (addressingMode < 0) { /* ERROR */
             printError(addressingMode, lineNum);
-            return 0;
+            return INCORRECT;
         }
         allowed_modes = (j == 1 && opcodes->max_ops[opcode] > 1 ? opcodes->allowed_src : opcodes->allowed_dst);
         if (!IS_ALLOWED(allowed_modes, opcode, addressingMode))

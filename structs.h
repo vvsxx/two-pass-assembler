@@ -1,6 +1,5 @@
 #define MAX_OPERATORS 16
 #define MAX_REGISTERS 8
-#define WORD_L 14
 
 struct macros_list {
     char *name;

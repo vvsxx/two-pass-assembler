@@ -1,13 +1,11 @@
 #include "header.h"
 
 word * createWordNode(struct word *node, int addr);
-int getOpValue (char *op, list *symbols);
 void codeWords(char *op, mem_img *img, list *symbols, int pos);
 void processDataDirective(char *token, mem_img *img, list *symbols);
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
-void addAddress(int **arr, int *size, int address);
 
 int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
@@ -27,7 +25,7 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
     while (fgets(line, sizeof(line), input) != NULL) {
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
-        token = strtok(line, " ,\t");
+        token = strtok(line, " \t");
         if (token == NULL)
             continue;
         sentence = getSentence(op_table, token);
@@ -47,9 +45,19 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
             opcode = getOpcode(op_table, token);
             if (op_table->max_ops[opcode] == 1) { /* only one operand is allowed */
                 dst = codeAddressingMode(dst, img, DST_POS);
+                if (dst == NULL){
+                    printError(MISSING_OPERAND, lineNum);
+                    isCorrect = INCORRECT;
+                    continue;
+                }
             } else if (op_table->max_ops[opcode] == 2) { /* two operands allowed */
                 src = codeAddressingMode(src, img, SRC_MODE_POS); /* code src addressing mode */
                 dst = codeAddressingMode(dst, img, DST_POS); /* code dst addressing mode */
+                if (src == NULL || dst == NULL){
+                    printError(MISSING_OPERAND, lineNum);
+                    isCorrect = INCORRECT;
+                    continue;
+                }
             }
             /* code opcode bits */
             decimalToBinary(opcode, &img->code->binary[OPCODE_START], OPCODE_LENGTH);
@@ -62,8 +70,8 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                     resetBits(img->code->binary, WORD_L);
                     src_val = getOpValue(src, symbols);
                     dst_val = getOpValue(dst, symbols);
-                    decimalToBinary(src_val, &img->code->binary[SRC_REG_POS], 3); /* code src bits */
-                    decimalToBinary(dst_val, &img->code->binary[DST_POS], 3); /* code dst bits */
+                    decimalToBinary(src_val, &img->code->binary[SRC_REG_POS], REG_WORD_SIZE); /* code src bits */
+                    decimalToBinary(dst_val, &img->code->binary[DST_POS], REG_WORD_SIZE); /* code dst bits */
                     img->IC++;
                 } /* operands are different */
                 else {
@@ -112,7 +120,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         ARE = symbol->ARE;
         value = symbol->value;
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
-        decimalToBinary(ARE, word, 2);
+        decimalToBinary(ARE, word, ARE_SIZE);
     } else if (addr_mode == IMMEDIATE) { /* # */
         op++;
         if (isalpha(op[0])){ /* value is symbol */
@@ -127,7 +135,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         if (pos == SRC_MODE_POS) /* register src position is different */
             pos = SRC_REG_POS;
         value = atoi(&op[1]);
-        decimalToBinary(value, &word[pos], 4);
+        decimalToBinary(value, &word[pos], REG_WORD_SIZE);
 
     } else if (addr_mode == INDEXED_MODE){ /* LABEL[x] */
         label = strDuplicate(op); /* get array name */
@@ -143,7 +151,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         value = getOpValue(label, symbols); /* get array address */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
         ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
-        decimalToBinary(ARE, word, 2); /* code ARE */
+        decimalToBinary(ARE, word, ARE_SIZE); /* code ARE */
         if ((symbol = getElementByName(symbols, label)) != NULL && symbol->isExternal)
             addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
         img->IC++;
@@ -176,8 +184,10 @@ void codeOpValue(char *op, mem_img *img, list *symbols, int pos){
 char * codeAddressingMode(char *op, mem_img *img, int pos){
     int adr_mode;
     op = strtok(NULL, " \t");
+    if (op == NULL)
+        return NULL;
     adr_mode = getAddressingMode(op);
-    decimalToBinary(adr_mode, &img->code->binary[pos], 2);
+    decimalToBinary(adr_mode, &img->code->binary[pos], ADDR_MODE_SIZE);
     return op;
 }
 

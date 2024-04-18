@@ -2,10 +2,10 @@
 
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
-macros_list *buildTable(FILE *input);
+macros_list *buildTable(FILE *input, opcode_table *opcodes);
 
 
-int preProcessor(char *filename){
+int preProcessor(char *filename, opcode_table *opcodes){
     FILE *inputFile, *outputFile;
     macros_list *macros_h = NULL;
     char ch;
@@ -21,22 +21,23 @@ int preProcessor(char *filename){
     rewind(inputFile);
     strcpy(outputFileName, filename);
     strcat(outputFileName, ".am\0");
-    macros_h = buildTable(inputFile);
+    macros_h = buildTable(inputFile, opcodes);
     outputFile = openFile(outputFileName, "w");
     rewind(inputFile);
     writeFile(inputFile, outputFile, macros_h);
     freeList(macros_h, MACROS_LIST);
     fclose(outputFile);
     fclose(inputFile);
-    return 1;
+    return SUCCESS;
 }
 
 /* function creates macro table */
-macros_list *buildTable(FILE *input) {
+macros_list *buildTable(FILE *input, opcode_table *opcodes) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];
     char buffer[LINE_LENGTH];
     char *token;
+    int isCorrect = SUCCESS;
     int newLine, i, isMacro = 0;
     while (fgets(line, sizeof(line), input) != NULL) {
         line[strcspn(line, "\n")] = '\0';
@@ -54,7 +55,10 @@ macros_list *buildTable(FILE *input) {
                     macros = safeMalloc(sizeof(macros_list));
                     macros_h = macros;
                 }
-
+                if ((isCorrect = isLegalName(token, opcodes)) != 0){
+                    isCorrect = INCORRECT;
+                    printError(ILLEGAL_MACROS_NAME, 0);
+                }
                 macros->name = strDuplicate(token);
                 macros->data = (char **) safeMalloc(sizeof(char *));
                 macros->lines = i+1;

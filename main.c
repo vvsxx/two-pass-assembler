@@ -1,10 +1,9 @@
 #include "header.h"
-void test(mem_img *img);
 
+void test(mem_img *img);
 
 int main(int argc, char *argv[]) {
     int i, errorCode;
-    int memory = 4096;
     opcode_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
@@ -18,7 +17,7 @@ int main(int argc, char *argv[]) {
     }
 
     opcodes = safeMalloc(sizeof (opcode_table)); /* create opcodes table */
-    getOpTable(opcodes); /* fill opcodes table */
+    getOpTable(opcodes, MAX_REGISTERS); /* fill opcodes table */
 
     /* run assembler for each file */
     for (i = 1; i < argc; ++i) {
@@ -27,8 +26,8 @@ int main(int argc, char *argv[]) {
         img->IC = 100;
         img->DC = 0;
 
-        if((errorCode = preProcessor(argv[i])) == SUCCESS) { /* deploy macros and create ".am" file */
-            if ((errorCode = firstPass(argv[i], symbols, opcodes, memory)) == SUCCESS) {  /* fill data tables and code mem_img */
+        if((errorCode = preProcessor(argv[i], opcodes)) == SUCCESS) { /* deploy macros and create ".am" file */
+            if ((errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE)) == SUCCESS) {  /* fill data tables and code mem_img */
                 if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) {  /* convert to binary than to base4 secure and write files */
                     writeFiles(symbols, img, argv[i]);
                 }
@@ -62,7 +61,7 @@ void printError(ErrorCode errorCode, int line){
         case NOT_A_NUMBER:
             fprintf(stdout,"Value is not a number in line %d\n", line); break;
         case EXTRANEOUS_TEXT:
-            fprintf(stdout,"Too many operands or extraneous text in line %d\n", line); break;
+            fprintf(stdout,"Extraneous text in line %d\n", line); break;
         case UNKNOWN_REGISTER:
             fprintf(stdout,"Unknown register in line %d\n", line); break;
         case ILLEGAL_STRING_DATA:
@@ -73,20 +72,52 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"Register does not exist in line %d\n", line); break;
         case UNDEFINED_ENTRY:
             fprintf(stdout,"Undefined entry in line %d\n", line); break;
-        case ILLEAGL_LABEL_NAME:
+        case ILLEGAL_LABEL_NAME:
             fprintf(stdout,"Illegal label name in line %d\n", line); break;
         case MULTIPLE_LABEL:
             fprintf(stdout,"The label name repeats an existing one in line %d\n", line); break;
-        case TOO_LONG:
+        case TOO_LONG_NAME:
             fprintf(stdout,"Too long label name in line %d\n", line); break;
         case OUT_OF_MEMORY:
             fprintf(stdout,"Not enough memory - %d / 4096\n", line); break;
+        case MISSING_OPERAND:
+            fprintf(stdout,"Missing operand in line - %d\n", line); break;
+        case ILLEGAL_COMMA:
+            fprintf(stdout,"Illegal comma in line - %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }
 }
 
+/* contains static data to fill opcode table in start of program */
+void getOpTable(opcode_table *table, int max_registers) {
+    int i;
+    char name[MAX_OPERATORS][OPCODE_LENGTH] = {"mov", "cmp", "add", "sub",
+                                               "not", "clr", "lea", "inc",
+                                               "dec", "jmp", "bne", "red",
+                                               "prn", "jsr", "rts", "hlt"};
 
+    int operands_needed[MAX_OPERATORS] = {2, 2, 2, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0};
+    int alwd_src[MAX_OPERATORS][MAX_MODES] = {{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1},
+                                              {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0},
+                                              {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0},
+                                              {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+
+    int alwd_dst[MAX_OPERATORS][MAX_MODES] = {{0, 1, 1, 1}, {1, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1},
+                                              {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1},
+                                              {0, 1, 1, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 1, 1},
+                                              {1, 1, 1, 1}, {0, 1, 0, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+
+    for (i = 0; i < max_registers; ++i) {
+        table->registerNames[i][0] = 'r';
+        table->registerNames[i][1] = '0' + i;
+    }
+
+    memcpy(table->name, name, sizeof(name));
+    memcpy(table->max_ops, operands_needed, sizeof(operands_needed));
+    memcpy(table->allowed_src, alwd_src, sizeof(alwd_src));
+    memcpy(table->allowed_dst, alwd_dst, sizeof(alwd_dst));
+}
 
 void test(mem_img *img){
     int i, counter, int_val, j, error;

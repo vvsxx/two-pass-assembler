@@ -33,6 +33,7 @@ typedef enum {
 
 /* errors */
 typedef enum {
+    INCORRECT = 0,
     UNKNOWN_OPERAND = (-1),
     ILLEGAL_OPERAND = (-2),
     UNKNOWN_OPERATOR = (-3),
@@ -46,10 +47,11 @@ typedef enum {
     MULTIPLE_CONS_COMMAS = (-11),
     MISSING_COMMA = (-12),
     REG_DOES_NOT_EXIST = (-13),
-    ILLEAGL_LABEL_NAME = (-14),
-    TOO_LONG = (-15),
+    ILLEGAL_LABEL_NAME = (-14),
+    TOO_LONG_NAME = (-15),
     EMPTY_FILE = (-16),
     OUT_OF_MEMORY = (-17),
     TOO_LONG_LINE = (-18),
-
+    MISSING_OPERAND = (-19),
+    ILLEGAL_MACROS_NAME = (-20),
 } ErrorCode;
