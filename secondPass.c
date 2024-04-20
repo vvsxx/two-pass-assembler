@@ -51,7 +51,7 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                     continue;
                 }
             } else if (op_table->max_ops[opcode] == 2) { /* two operands allowed */
-                src = codeAddressingMode(src, img, SRC_MODE_POS); /* code src addressing mode */
+                src = codeAddressingMode(src, img, SRC_POS); /* code src addressing mode */
                 dst = codeAddressingMode(dst, img, DST_POS); /* code dst addressing mode */
                 if (src == NULL || dst == NULL){
                     printError(MISSING_OPERAND, lineNum);
@@ -76,7 +76,7 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                 } /* operands are different */
                 else {
                     /* src operand coding */
-                    codeOpValue(src, img, symbols, SRC_MODE_POS);
+                    codeOpValue(src, img, symbols, SRC_POS);
                     /* dst operand coding */
                     codeOpValue(dst, img, symbols, DST_POS);
                 }
@@ -132,7 +132,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         }
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
     } else if (addr_mode == REGISTER_MODE) { /* register */
-        if (pos == SRC_MODE_POS) /* register src position is different */
+        if (pos == SRC_POS) /* register src position is different */
             pos = SRC_REG_POS;
         value = atoi(&op[1]);
         decimalToBinary(value, &word[pos], REG_WORD_SIZE);
@@ -183,7 +183,7 @@ void codeOpValue(char *op, mem_img *img, list *symbols, int pos){
 
 char * codeAddressingMode(char *op, mem_img *img, int pos){
     int adr_mode;
-    op = strtok(NULL, " \t");
+    op = strtok(NULL, " ,");
     if (op == NULL)
         return NULL;
     adr_mode = getAddressingMode(op);

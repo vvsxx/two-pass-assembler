@@ -5,7 +5,6 @@ int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 
 
-
 int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
@@ -37,11 +36,19 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
         token = strtok(line, " \t");
         if (token == NULL)
             continue;
+        if (token[strlen(token)-1] == ',') {
+            printError(ILLEGAL_COMMA, lineNum);
+            isCorrect;
+            token[strlen(token)-1] = '\0';
+        }
         type = getSentence(opcodes, token);
         if (type == LABEL){ /* label declaration case */
             strcpy(labelName, token);
-            if ((token = strtok(NULL, " \t")) == NULL) /* label before empty line */
+            if ((token = strtok(NULL, " \t")) == NULL) { /* label before empty line */
+                printError(EMPTY_LABEL, lineNum);
                 continue;
+            }
+
             type = getSentence(opcodes, token);
             if (type != ENTRY && type != EXTERN && token != NULL)
                 symbols = processLabel(type, pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum,
@@ -169,7 +176,19 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
 /*  */
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
-    for (j = 1; (token = strtok(NULL, ",")) != NULL; j++) { /* 'j' is operand number */
+    char delim[3];
+
+    for (j = 1; token != NULL && j <= opcodes->max_ops[opcode]; j++) { /* 'j' is operand number */
+        if (j == 1)
+            strcpy(delim, " \t");
+        else
+            strcpy(delim, ",");
+        token = strtok(NULL, delim);
+        token = deleteWhiteSpaces(token);
+        if (token[0] == ',' && j == 1){
+            printError(ILLEGAL_COMMA, lineNum);
+            token++;
+        }
         if (j > opcodes->max_ops[opcode])
             printError(EXTRANEOUS_TEXT, lineNum);
         if (j == 1)

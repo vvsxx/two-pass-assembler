@@ -2,28 +2,26 @@
 
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
+
 macros_list *buildTable(FILE *input, opcode_table *opcodes);
 
 
-int preProcessor(char *filename, opcode_table *opcodes){
+int preProcessor(char *filename, opcode_table *opcodes) {
     FILE *inputFile, *outputFile;
     macros_list *macros_h = NULL;
     char ch;
     char inputFileName[strlen(filename) + 4]; /* ".as/.am" + '\0' */
     char outputFileName[strlen(filename) + 4];
-    /* prepare input/output files */
-    strcpy(inputFileName,filename);
-    strcat(inputFileName, ".as\0");
-    inputFile = openFile(inputFileName, "r");
+    strcpy(inputFileName, filename);
+    strcat(inputFileName, ".as\0"); /* create input file name */
+    inputFile = openFile(inputFileName, "r"); /* open input file for read */
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
-    /* if file is empty, stop here */
-    if (ch == EOF)
+    if (ch == EOF) /* if file is empty, stop here */
         return EMPTY_FILE;
 
-    rewind(inputFile);
     strcpy(outputFileName, filename);
-    strcat(outputFileName, ".am\0");
-    outputFile = openFile(outputFileName, "w");
+    strcat(outputFileName, ".am\0"); /* create output file name */
+    outputFile = openFile(outputFileName, "w"); /* open output file for write */
     macros_h = buildTable(inputFile, opcodes); /* build macros table */
     rewind(inputFile);
     writeFile(inputFile, outputFile, macros_h);
@@ -40,50 +38,51 @@ macros_list *buildTable(FILE *input, opcode_table *opcodes) {
     char buffer[LINE_LENGTH];
     char *token;
     int isCorrect = SUCCESS;
-    int i, lineNum = 0, newLine, isMacro = 0;
+    int i, lineNum = 0, isMacro = 0;
     while (fgets(line, sizeof(line), input) != NULL) {
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
-        token = strtok(line, " ,\t");
-        while (token != NULL) {
-            if (strcmp(token,"mcr") == 0) { /* macro definition found */
-                isMacro = 1;
-                i = 0;
-                token = strtok(NULL, " \t"); /* macro name */
-                if (macros != NULL) { /* list already exist */
-                    macros->next = safeMalloc(sizeof(macros_list));
-                    macros = macros->next;
-                } else { /* list is empty  */
-                    macros = safeMalloc(sizeof(macros_list));
-                    macros_h = macros;
-                }
-                if ((isCorrect = isSavedWord(token, opcodes)) != 0){
-                    isCorrect = INCORRECT;
-                    printError(ILLEGAL_MACRO_NAME, lineNum);
-                }
-                macros->name = strDuplicate(token);
-                macros->data = (char **) safeMalloc(sizeof(char *));
-                macros->lines = i+1;
-                token = strtok(NULL, " ,\t");
-                i--;
-            } else if (isMacro && strcmp(token, "endmcr")) { /* inside macro definition */
-                if (newLine)
-                    macros->data[i] = safeMalloc(LINE_LENGTH * sizeof(char));
-                newLine = 0;
-                strcat(macros->data[i], " ");
-                strcat(macros->data[i], token);
-            } else if (strcmp(token, "endmcr") == 0) { /* end of macro definition found */
-                isMacro = 0;
-                i = 0;
+        token = strtok(line, " \t");
+        if (token == NULL) /* empty line */
+            continue;
+        if (strcmp(token, "mcr") == 0) { /* macro definition found */
+            isMacro = 1;
+            i = 0;
+            token = strtok(NULL, " \t"); /* macro name */
+            if (token == NULL) {
+                isCorrect = INCORRECT;
+                printError(ILLEGAL_MACRO_NAME, lineNum);
+                continue;
             }
-            token = strtok(NULL, " \t");
+            if (macros != NULL) { /* list already exist */
+                macros->next = safeMalloc(sizeof(macros_list));
+                macros = macros->next;
+            } else { /* list is empty  */
+                macros = safeMalloc(sizeof(macros_list));
+                macros_h = macros;
+            }
+            if ((isCorrect = isSavedWord(token, opcodes)) != 0) {
+                isCorrect = INCORRECT;
+                printError(ILLEGAL_MACRO_NAME, lineNum);
+            }
+            macros->name = strDuplicate(token);
+            macros->data = (char **) safeMalloc(sizeof(char *));
+            macros->lines = i + 1;
+            i--;
+        } else if (isMacro && strcmp(token, "endmcr") != 0) { /* inside macro declaration */
+            macros->data[i] = safeMalloc(LINE_LENGTH * sizeof(char));
+            strcat(macros->data[i], buffer);
+        } else if (strcmp(token, "endmcr") == 0) { /* end of macro declaration found */
+            isMacro = 0;
+            i = 0;
+            continue;
         }
-        newLine = 1;
         i++;
     }
     return macros_h;
 }
+
 
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char line[LINE_LENGTH], buffer[LINE_LENGTH], *token; /* line processing */
@@ -105,8 +104,8 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
         if ((macros = getMacroByName(macros_h, token)) != NULL) { /* marco name found */
             i = 0;
             data = macros->data[i];
-            while (data != NULL && i <= macros->lines){
-                fprintf(outputFile, "\t%s\n", data);
+            while (data != NULL && i <= macros->lines) {
+                fprintf(outputFile, "%s\n", data);
                 i++;
                 data = macros->data[i];
             }

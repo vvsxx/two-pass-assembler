@@ -9,6 +9,7 @@
 /* system parameters */
 #define FIRST_ADDRESS 100 /* addressing starts from this address */
 #define MEMORY_SIZE 4096
+#define MAX_VALUE 4096
 
 /* lengths */
 #define LINE_LENGTH 81
@@ -24,7 +25,7 @@
 /* positioning */
 #define OPCODE_START 6
 #define DATA_WORD_POS 2
-#define SRC_MODE_POS 4
+#define SRC_POS 4
 #define SRC_REG_POS 5
 #define DST_POS 2
 

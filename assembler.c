@@ -26,13 +26,17 @@ int main(int argc, char *argv[]) {
         img->IC = 100;
         img->DC = 0;
 
-        if((errorCode = preProcessor(argv[i], opcodes)) == SUCCESS) { /* deploy macros and create ".am" file */
+        errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
+        if (errorCode != SUCCESS){
+            printError(errorCode,0);
+            exit(0);
+        }
             if ((errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE)) == SUCCESS) {  /* fill data tables and code mem_img */
                 if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) {  /* convert to binary than to base4 secure and write files */
                     writeFiles(symbols, img, argv[i]);
                 }
             }
-        }
+
 
 
         test(img);
@@ -50,6 +54,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+/* the function receives the error code and line number and displays a corresponding warning. */
 void printError(ErrorCode errorCode, int line){
     switch (errorCode) {
         case UNKNOWN_OPERAND:
@@ -86,6 +91,12 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"Illegal comma in line - %d\n", line); break;
         case ILLEGAL_MACRO_NAME:
             fprintf(stdout,"Illegal macro name in line - %d\n", line); break;
+        case EMPTY_FILE:
+            fprintf(stdout,"File is empty\n"); break;
+        case EMPTY_LABEL:
+            fprintf(stdout,"WARNING: Empty label in line %d\n", line); break;
+        case MULTIPLE_CONS_COMMAS:
+            fprintf(stdout,"Multiple consecutive commas in line %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

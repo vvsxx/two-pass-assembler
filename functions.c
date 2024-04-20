@@ -12,7 +12,7 @@ FILE * openFile(char *fileName, char *mode){
         else if (errno == ENOENT)
             fprintf(stderr, "File \"%s\" not found\n", fileName);
         else
-            fprintf(stderr, "Error opening file\n");
+            fprintf(stderr, "Error opening file %s\n", fileName);
 
         exit(EXIT_FAILURE);
     }
@@ -211,6 +211,7 @@ int createEntFile(list *labels, char *fileName){
 int checkLine(char *line){
     char *tmp = line;
     char lastChar = tmp[strlen(tmp)-1];
+    char *buffer, *token;
     if (lastChar == ',')
         return EXTRANEOUS_TEXT;
     if (strlen(tmp) > LINE_LENGTH)

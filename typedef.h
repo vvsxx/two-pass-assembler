@@ -54,4 +54,6 @@ typedef enum {
     TOO_LONG_LINE = (-18),
     MISSING_OPERAND = (-19),
     ILLEGAL_MACRO_NAME = (-20),
+    EMPTY_LABEL = (-21),
+    TOO_BIG_NUM = (-22)
 } ErrorCode;
