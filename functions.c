@@ -216,26 +216,14 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
     char *tmp = buffer;
     SentenceType type;
     strcpy(buffer, line);
-    strcpy(operands_line, line);
     lastChar = &tmp[strlen(tmp) - 1];
     line = deleteWhiteSpaces(line);
-    if (line[0] == ';')
+    if (line[0] == ';') /* skip comment line */
         return SUCCESS;
     if ((*lastChar) == ',')
         return EXTRANEOUS_TEXT;
     if (strlen(tmp) > LINE_LENGTH)
         return TOO_LONG_LINE;
-    while (tmp[0] == ' ')
-        tmp++;
-    lastChar = &tmp[0];
-    while (tmp[0] != '\0') {
-        while (tmp[0] == ' ')
-            tmp++;
-        if (lastChar == ',' && tmp[0] == ',')
-            return MULTIPLE_CONS_COMMAS;
-        lastChar = &tmp[0];
-        tmp++;
-    }
     tmp = buffer;
     token = strtok(buffer, " \t");
     type = getSentence(opcodes, token, lineNum);
@@ -287,6 +275,9 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
                 return MULTIPLE_CONS_COMMAS;
             if (token[strlen(token) - 1] != ',' && p[0] != ',') {
                 token = strtok(operands_line, ",");
+                p = &token[strlen(token)]+1;
+                if (p[0] == ',')
+                    return MULTIPLE_CONS_COMMAS;
                 token = strtok(NULL, ",");
                 if (token == NULL)
                     return MISSING_COMMA;
@@ -298,6 +289,11 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
             p = deleteWhiteSpaces(p);
             if (p[0] == ',')
                 return MULTIPLE_CONS_COMMAS;
+            token = strtok(operands_line, " ,\t");
+            token = strtok(NULL, " ,\t");
+            token = strtok(NULL, " ,\t");
+            if (token != NULL)
+                return EXTRANEOUS_TEXT;
         }
     } else {
         return UNKNOWN_OPERATOR;
