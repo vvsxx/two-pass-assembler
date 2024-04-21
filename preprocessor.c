@@ -71,7 +71,7 @@ macros_list *buildTable(FILE *input, opcode_table *opcodes) {
                 macros = safeMalloc(sizeof(macros_list));
                 macros_h = macros;
             }
-            if ((isCorrect = isSavedWord(token, opcodes)) != 0) {
+            if ((isCorrect = isSavedWord(token, opcodes)) != SUCCESS) {
                 isCorrect = INCORRECT;
                 printError(ILLEGAL_MACRO_NAME, lineNum);
             }

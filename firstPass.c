@@ -146,7 +146,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
     int errorCheck;
     list *current, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if ((errorCheck = isLegalName(labelName, opcodes)) != 0){
+    if ((errorCheck = isLegalName(labelName, opcodes)) != SUCCESS){
         (*isCorrect) = INCORRECT;
         printError(ILLEGAL_LABEL_NAME, lineNum);
     }

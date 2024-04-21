@@ -23,7 +23,7 @@ word * createInstructionWord(mem_img *img);
  *   SUCCESS if the second pass completes without errors, or 0 if an error occurs.
  */
 int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols){
-    struct word *tmp;
+    struct word *tmp; /* temporary pointer to process words */
     char line[LINE_LENGTH], *token; /* line processing */
     char amFile[strlen(fileName) + 4]; /* ".am" + '\0' */
     char *src, *dst; /* operands */
@@ -44,17 +44,14 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
         if (token == NULL)
             continue;
         sentence = getSentence(op_table, token, lineNum);
-        /* skip label declaration */
-        if (sentence == LABEL) {
+        if (sentence == LABEL) { /* skip label declaration */
             token = strtok(NULL, " \t");
             sentence = getSentence(op_table, token, lineNum);
         }
-        /* opcode defined */
         if (sentence == INSTRUCTION) {
             src = NULL;
             dst = NULL;
-            /* create new word */
-            img->code = createInstructionWord(img);
+            img->code = createInstructionWord(img); /* create new word */
             resetBits(img->code->binary, WORD_L); /* turn off all bits in word */
             /* set addressing mode bits and get operand tokens */
             opcode = getOpcode(op_table, token);
@@ -74,9 +71,8 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                     continue;
                 }
             }
-            /* code opcode bits */
-            decimalToBinary(opcode, &img->code->binary[OPCODE_START], OPCODE_LENGTH);
-            img->IC++;
+            decimalToBinary(opcode, &img->code->binary[OPCODE_START], OPCODE_LENGTH); /* code opcode bits */
+            img->IC++; /* increase instruction counter */
             /* create new words for each operand */
             if (src != NULL && dst != NULL) {
                 /* both operands are registers and can be coded in one word */
@@ -88,21 +84,14 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                     decimalToBinary(src_val, &img->code->binary[SRC_REG_POS], REG_WORD_SIZE); /* code src bits */
                     decimalToBinary(dst_val, &img->code->binary[DST_POS], REG_WORD_SIZE); /* code dst bits */
                     img->IC++;
-                } /* operands are different */
-                else {
-                    /* src operand coding */
-                    codeOpValue(src, img, symbols, SRC_POS);
-                    /* dst operand coding */
-                    codeOpValue(dst, img, symbols, DST_POS);
+                } else { /* operands are different */
+                    codeOpValue(src, img, symbols, SRC_POS); /* src operand coding */
+                    codeOpValue(dst, img, symbols, DST_POS); /* dst operand coding */
                 }
-            } /* only destination operand */
-            else if (dst != NULL){
+            } else if (dst != NULL){ /* only destination operand */
                 codeOpValue(dst, img, symbols, DST_POS);
             }
-
-
-            /* data declaration found */
-        } else if (sentence == DATA || sentence == STRING) {
+        } else if (sentence == DATA || sentence == STRING) { /* data declaration found */
             processDataDirective(token, img, symbols);
         }
     }

@@ -23,7 +23,7 @@ FILE *openFile(char *fileName, char *mode) {
 void *safeMalloc(size_t size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
-        fprintf(stdout, "Allocating memory error\n");
+        fprintf(stdout, "CRITICAL ERROR: Allocating memory failed\n");
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -129,7 +129,7 @@ void addAddress(int **arr, int *size, int address) {
     int newSize = (*size) + 1;
     int *tmp = realloc(*arr, newSize * sizeof(int));
     if (tmp == NULL) {
-        fprintf(stdout, "Allocating memory error\n");
+        fprintf(stdout, "CRITICAL ERROR: Allocating memory failed\n");
         exit(EXIT_FAILURE);
     }
     *arr = tmp;
@@ -301,6 +301,13 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
     return SUCCESS;
 }
 
+/*
+ * Checks if the provided name matches any saved word in the opcode table.
+ * Receives the name to be checked and pointer to the opcode table containing saved words.
+ * Returns an integer indicating the result of the check:
+ *     - ILLEGAL_LABEL_NAME if the name matches a saved word in the opcode table.
+ *     - SUCCESS if the name does not match any saved word.
+ */
 int isSavedWord(char *name, opcode_table *opcodes) {
     int i;
     for (i = 0; i < MAX_OPERATORS; ++i) {
@@ -311,9 +318,14 @@ int isSavedWord(char *name, opcode_table *opcodes) {
         if (strcmp(name, opcodes->registerNames[i]) == 0)
             return ILLEGAL_LABEL_NAME;
     }
-    return 0;
+    return SUCCESS;
 }
 
+/*
+ * Checks if the provided name is a legal label name, uses isSavedWord function to check that name is not a saved word.
+ * Receives the name to be checked and pointer to the opcode table containing saved words.
+ * Returns SUCCESS or error code in case that name is illegal;
+ */
 int isLegalName(char *name, opcode_table *opcodes) {
     int i;
     if (strlen(name) > LABEL_LENGTH)
