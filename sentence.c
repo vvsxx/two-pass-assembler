@@ -71,6 +71,14 @@ int getOpValue (char *op, list *symbols){
     return UNKNOWN_OPERATOR;
 }
 
+/*
+ * Determines the type of sentence based on the provided token.
+ * Parameters:
+ *   opcodes: Pointer to the opcode table containing binary values and addressing modes.
+ *   token: The token representing the sentence.
+ *   lineNum: The line number in the source file.
+ * Returns: The type of sentence (SentenceType).
+ */
 SentenceType getSentence(opcode_table *opcodes, char *token, int lineNum){
     SentenceType type;
     char *tmp = safeMalloc(strlen(token)+1);
@@ -105,6 +113,11 @@ SentenceType getSentence(opcode_table *opcodes, char *token, int lineNum){
     return type;
 }
 
+/*
+ * Determines the addressing mode of the operand.
+ * Parameters: operand: The operand string.
+ * Returns: The addressing mode of the operand (AddressingMode) defined in header.h.
+ */
 int getAddressingMode (char *operand){
     OperandType type;
     operand = deleteWhiteSpaces(operand);
@@ -130,7 +143,13 @@ int getAddressingMode (char *operand){
     return UNKNOWN_OPERAND;
 }
 
-/* returns opcode value if exist or UNKNOWN_OPERATOR if doesn't */
+/*
+ * Retrieves the opcode of the instruction represented by the token.
+ * Parameters:
+ *   opcodes: Pointer to the opcode table containing binary values and addressing modes.
+ *   token: The token representing the instruction mnemonic.
+ * Returns: The opcode decimal value, or UNKNOWN_OPERATOR if the token does not match any known instruction.
+ */
 int getOpcode(opcode_table *opcodes, char *token){
     int i;
     if (token[strlen(token)-1] == ',')
