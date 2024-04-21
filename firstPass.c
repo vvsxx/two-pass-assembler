@@ -1,10 +1,24 @@
 #include "header.h"
 
+/* functions accessible only from this file */
 list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
 
+/*
+ * Performs the first pass of the assembly process, constructing the symbol table (labels and constants),
+ * computing addresses for each label, checking for memory limits, and detecting syntax errors.
+ *
+ * Parameters:
+ *   fileName: The name of the source file being processed.
+ *   symbols: Pointer to the list of symbols (labels and constants).
+ *   opcodes: Pointer to the opcode table containing static data about each operator.
+ *   memory: Total memory available for the program.
+ *
+ * Returns:
+ *   SUCCESS if the first pass completes without errors, or an error code if an error occurs.
+ */
 int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */

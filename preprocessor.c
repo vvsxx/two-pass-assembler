@@ -2,10 +2,19 @@
 
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
-
 macros_list *buildTable(FILE *input, opcode_table *opcodes);
 
-
+/*
+ * Pre-processes the source file by deploying macros and creating a ".am" file.
+ *
+ * Parameters:
+ *   filename: The name of the source file to be pre-processed.
+ *   opcodes: Pointer to the opcode table containing binary values and addressing modes.
+ *
+ * Returns:
+ *   SUCCESS if pre-processing is successful, EMPTY_FILE if the file is empty,
+ *   or an error code if an error occurs during pre-processing.
+ */
 int preProcessor(char *filename, opcode_table *opcodes) {
     FILE *inputFile, *outputFile;
     macros_list *macros_h = NULL;

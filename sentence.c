@@ -1,9 +1,12 @@
 #include "header.h"
 
-/*
- * Sentence processing functions
- */
+/* Sentence processing functions */
 
+/*
+ * Determines the type of operand based on the provided token.
+ * Receives the token representing the operand.
+ * Returns the type of operand (OperandType).
+ */
 OperandType getOpType(char *token){
     token = deleteWhiteSpaces(token);
     if (token[0] == 'r' && isdigit(token[1])){ /* REGISTER, */
@@ -28,6 +31,11 @@ OperandType getOpType(char *token){
     return UNKNOWN_OPERAND;
 }
 
+/*
+ * Retrieves the value of the operand based on its type and representation.
+ * Receives the operand string and the pointer to the list of symbols table (labels and constants).
+ * Returns the value of the operand if it's recognized and valid, or UNKNOWN_OPERATOR if it's unrecognized.
+ */
 int getOpValue (char *op, list *symbols){
     list *symbol;
     OperandType type = getOpType(op);

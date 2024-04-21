@@ -1,5 +1,6 @@
 #include "header.h"
 
+/* functions accessible only from this file */
 word * createWordNode(struct word *node, int addr);
 void codeWords(char *op, mem_img *img, list *symbols, int pos);
 void processDataDirective(char *token, mem_img *img, list *symbols);
@@ -7,6 +8,20 @@ void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
 
+/*
+ * Performs the second pass of the assembly process, generating the binary code and data section.
+ * It processes each line of the ".am" file, codes instructions and data directives,
+ * and handles operand addressing modes.
+ *
+ * Parameters:
+ *   fileName: The name of the source file being processed.
+ *   img: Pointer to the memory image structure containing binary code and data.
+ *   op_table: Pointer to the opcode table containing binary values and addressing modes.
+ *   symbols: Pointer to the list of symbols (labels and constants).
+ *
+ * Returns:
+ *   SUCCESS if the second pass completes without errors, or 0 if an error occurs.
+ */
 int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols){
     struct word *tmp;
     char line[LINE_LENGTH], *token; /* line processing */
@@ -15,7 +30,7 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
-    int isCorrect = 1;
+    int isCorrect = SUCCESS;
     list *symbol;
     strcpy(amFile, fileName);
     strcat(amFile, ".am");

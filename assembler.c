@@ -2,6 +2,18 @@
 
 void test(mem_img *img);
 
+/*
+ * The main function of the two-pass assembler program.
+ * It processes command line arguments, initializes data structures,
+ * performs two passes over the source files, and generates output files.
+ *
+ * Parameters:
+ *   argc: The number of command line arguments.
+ *   argv: An array of strings containing the command line arguments.
+ *
+ * Returns:
+ *   0 on successful execution, 1 if too few arguments are provided.
+ */
 int main(int argc, char *argv[]) {
     int i, errorCode;
     opcode_table *opcodes; /* contains binary values and allowed addressing modes */
@@ -46,13 +58,11 @@ int main(int argc, char *argv[]) {
         free(img);
 
     }
-
     free(opcodes);
-
     return 0;
 }
 
-/* the function receives the error code and line number and displays a corresponding warning. */
+/* the function receives the error code and line number and displays a corresponding warning message. */
 void printError(ErrorCode errorCode, int line){
     switch (errorCode) {
         case UNKNOWN_OPERAND:
