@@ -9,13 +9,10 @@ int main(int argc, char *argv[]) {
     mem_img *img; /* contains binary code */
 
     /* check that at least one argument had been received */
-
-    
     if (argc < 2) {
         printf("too few arguments, please enter al least 1 filename\n");
         return 1;
     }
-
     opcodes = safeMalloc(sizeof (opcode_table)); /* create opcodes table */
     getOpTable(opcodes, MAX_REGISTERS); /* fill opcodes table */
 
@@ -25,7 +22,6 @@ int main(int argc, char *argv[]) {
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
         img->IC = 100;
         img->DC = 0;
-
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
         if (errorCode != SUCCESS){
             printError(errorCode,0);
@@ -39,11 +35,7 @@ int main(int argc, char *argv[]) {
         if (errorCode != SUCCESS){
             continue;
         }
-        writeFiles(symbols, img, argv[i]);
-
-
-
-
+        writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
 
         test(img);
 

@@ -209,11 +209,11 @@ int createEntFile(list *labels, char *fileName) {
 }
 
 int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
-    int opcode, i;
-    char *lastChar, *p;
-    char buffer[strlen(line) + 1], *token;
+    int opcode;
+    char *lastChar, *p, *token;
+    char buffer[strlen(line) + 1];
     char operands_line[strlen(line) + 1];
-    char *src, *dst, *tmp = buffer;
+    char *tmp = buffer;
     SentenceType type;
     strcpy(buffer, line);
     strcpy(operands_line, line);
