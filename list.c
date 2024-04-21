@@ -6,10 +6,18 @@ void freeSymList(struct list *p) {
     struct list *tmp;
     while (p != NULL) {
         tmp = p->next;
-        free(p->name);
-        free(p->type);
-        free(p->addresses);
-        free(p);
+        if (p->name != NULL) {
+            free(p->name);
+        }
+        if (p->type != NULL) {
+            free(p->type);
+        }
+        if (p->addresses != NULL) {
+            free(p->addresses);
+        }
+        if (p != NULL) {
+            free(p);
+        }
         p = tmp;
     }
 }
@@ -76,6 +84,8 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
         list->next = (struct list*) safeMalloc(sizeof(struct list));
         list = list->next;
     }
+    list->type = NULL;
+    list->addresses = NULL;
     list->next = NULL;
     token = deleteWhiteSpaces(token);
 
@@ -84,7 +94,8 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     list->isExternal = 0;
 
     if (type == DEFINE) {
-        token = strtok(NULL, "=");
+        if ((token = strtok(NULL, "=")) == NULL)
+            return NULL;
         list->value = atoi(token);
         list->type = strDuplicate("mdefine");
         list->ARE = ARE_ABSOLUTE;

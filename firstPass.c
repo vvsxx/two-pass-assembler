@@ -3,7 +3,7 @@
 list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
-
+void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
 
 int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory){
     list *tmp, *symbols_head = symbols; /* list processing */
@@ -11,7 +11,7 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
     char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
     int IC = FIRST_ADDRESS, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
-    int isCorrect = 1; /* errors flag */
+    int isCorrect = 1, res; /* errors flag */
     int *pIC = &IC, *pDC = &DC, *p_isCorrect = &isCorrect; /* pointers */
     int opcode; /* opcode decimal value */
     SentenceType type;
@@ -22,14 +22,16 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
     buffer = safeMalloc(sizeof (line));
     /* read each line from .am file */
     while (fgets(line, sizeof(line), input) != NULL){
+        res = SUCCESS;
+        lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
-        isCorrect = checkLine(token);
-        if (isCorrect != SUCCESS) {
-            printError(isCorrect, lineNum);
+        res = syntaxCheck(token, opcodes, lineNum);
+        if (res != SUCCESS) {
+            isCorrect = INCORRECT;
+            printError(res, lineNum);
             continue;
         }
         memset(labelName, '\0', strlen(labelName));
-        lineNum++;
         memset(buffer, '\0', strlen(buffer));
         strcpy(buffer,line);
         line[strcspn(line, "\n")] = '\0';
@@ -38,10 +40,10 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
             continue;
         if (token[strlen(token)-1] == ',') {
             printError(ILLEGAL_COMMA, lineNum);
-            isCorrect;
+            isCorrect = ILLEGAL_COMMA;
             token[strlen(token)-1] = '\0';
         }
-        type = getSentence(opcodes, token);
+        type = getSentence(opcodes, token, lineNum);
         if (type == LABEL){ /* label declaration case */
             strcpy(labelName, token);
             if ((token = strtok(NULL, " \t")) == NULL) { /* label before empty line */
@@ -49,12 +51,20 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
                 continue;
             }
 
-            type = getSentence(opcodes, token);
-            if (type != ENTRY && type != EXTERN && token != NULL)
+            type = getSentence(opcodes, token, lineNum);
+            if (type != ENTRY && type != EXTERN && token != NULL) {
                 symbols = processLabel(type, pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum,
-                                       p_isCorrect);
+                                       &res);
+                if (res < 0) {
+                    printError(res, lineNum);
+                    isCorrect = INCORRECT;
+                }
+            }
         } else if (type == DEFINE) { /* constant definition case */
-            symbols = createSymbol(symbols, token, buffer, type);
+            if ((tmp = createSymbol(symbols, token, buffer, type)) != NULL)
+                symbols = tmp;
+            else
+                printError(ILLEGAL_DEF_DECLAR, lineNum);
         } else if (type == INSTRUCTION){
             opcode = getOpcode(opcodes, token);
             IC += processInstruction(token, opcodes, opcode, lineNum);
@@ -72,13 +82,7 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
             continue;
         }
         else if (type == DATA || type == STRING){
-            if (type == STRING) {
-                token = strtok(NULL, " \t");
-                DC += stringLine(token, &isCorrect, lineNum);
-            } else {
-                while ((token = strtok(NULL, ",")) != NULL)
-                    DC++;
-            }
+            processDirective(type, &DC, token, lineNum, &isCorrect);
         } else { /* Illegal case */
             printError(UNKNOWN_OPERATOR,lineNum);
             isCorrect = INCORRECT;;
@@ -87,8 +91,10 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
     /* add up counters */
     tmp = symbols_head;
     while (tmp != NULL){
-        if (strcmp(tmp->type, "data") == 0)
-            tmp->value += IC;
+        if (tmp->type != NULL) {
+            if (strcmp(tmp->type, "data") == 0)
+                tmp->value += IC;
+        }
         tmp = tmp->next;
     }
     if ((mem_counter = (IC - FIRST_ADDRESS) + DC) > memory) {
@@ -104,22 +110,19 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
 int stringLine(char *token, int *isCorrect, int lineNum){
     int DC = 1;
     if (token[0] != '\"'){
-        (*isCorrect) = INCORRECT;
-        printError(ILLEGAL_STRING_DATA, lineNum);
+        return ILLEGAL_STRING_DATA;
     }
     token++;
-    while (token[0] != '\"'){
+    while (token[0] != '\"' && token[0] != '\0'){
         DC++;
         token++;
     }
     if (token[0] != '\"'){
-        (*isCorrect) = INCORRECT;
-        printError(ILLEGAL_STRING_DATA, lineNum);
+        return ILLEGAL_STRING_DATA;
     }
     token = strtok(token, " \" ");
     if (token != NULL){
-        (*isCorrect) = INCORRECT;
-        printError(EXTRANEOUS_TEXT, lineNum);
+        return ILLEGAL_STRING_DATA;
     }
     return DC;
 }
@@ -153,13 +156,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
             strcpy(current->type, "data");
         current->ARE = ARE_RELOCATABLE;
         current->value = *DC;
-        if (type == STRING) {
-            token = strtok(NULL, " \t");
-            *DC += stringLine(token, isCorrect, lineNum);
-        } else {
-            while ((token = strtok(NULL, ",")) != NULL)
-                (*DC)++;
-        }
+        processDirective(type, DC, token, lineNum, isCorrect);
     } else if (type == INSTRUCTION) {
         opcode = getOpcode(opcodes, token);
         current->type = strDuplicate("code");
@@ -176,14 +173,10 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
 /*  */
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
-    char delim[3];
 
     for (j = 1; token != NULL && j <= opcodes->max_ops[opcode]; j++) { /* 'j' is operand number */
-        if (j == 1)
-            strcpy(delim, " \t");
-        else
-            strcpy(delim, ",");
-        token = strtok(NULL, delim);
+
+        token = strtok(NULL, " ,\t");
         token = deleteWhiteSpaces(token);
         if (token[0] == ',' && j == 1){
             printError(ILLEGAL_COMMA, lineNum);
@@ -213,4 +206,27 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
         }
     }
     return IC;
+}
+
+void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck){
+    int res;
+    if (type == STRING) {
+        token = strtok(NULL, " \t");
+        res = stringLine(token, errorCheck, lineNum);
+        if (res > 0) {
+            (*DC) += res;
+        } else {
+            printError(res, lineNum);
+            (*errorCheck) = INCORRECT;
+        }
+    } else {
+        while ((token = strtok(NULL, ",")) != NULL) {
+            token = deleteWhiteSpaces(token);
+            if (strchr(token, ' ') != NULL){
+                (*errorCheck) = INCORRECT;
+                printError(ILLEGAL_DATA_DIRECT, lineNum);
+            }
+            (*DC)++;
+        }
+    }
 }

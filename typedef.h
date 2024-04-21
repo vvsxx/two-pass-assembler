@@ -55,5 +55,8 @@ typedef enum {
     MISSING_OPERAND = (-19),
     ILLEGAL_MACRO_NAME = (-20),
     EMPTY_LABEL = (-21),
-    TOO_BIG_NUM = (-22)
+    TOO_BIG_NUM = (-22),
+    ILLEGAL_DEF_DECLAR = (-23),
+    ILLEGAL_DATA_DIRECT = (-24),
+    MISSING_OPERATOR = (-25)
 } ErrorCode;

@@ -63,29 +63,38 @@ int getOpValue (char *op, list *symbols){
     return UNKNOWN_OPERATOR;
 }
 
-SentenceType getSentence(opcode_table *opcodes, char *token){
-    token = deleteWhiteSpaces(token);
-    if (token[0] == ';') /* comment */
-        return COMMENT;
-    else if (token [0] == '\0') /* empty */
-        return EMPTY;
-    else if (token[strlen(token)-1] == ':')
-        return LABEL;
-    else if (strcmp(token,".define") == 0)
-        return DEFINE;
-    else if (getOpcode(opcodes, token) != UNKNOWN_OPERATOR) /* instruction */
-        return INSTRUCTION;
-    else if (token [0] == '.') { /* directive sentence */
-        if (strcmp(token, ".extern") == 0) /* .extern */
-            return EXTERN;
-        else if (strcmp(token, ".entry") == 0) /* .entry */
-            return ENTRY;
-        else if (strcmp(token, ".data") == 0)/* .data */
-            return DATA;
-        else if (strcmp(token, ".string") == 0)/* .string */
-            return STRING;
+SentenceType getSentence(opcode_table *opcodes, char *token, int lineNum){
+    SentenceType type;
+    char *tmp = safeMalloc(strlen(token)+1);
+    strcpy(tmp, token);
+    tmp = deleteWhiteSpaces(tmp);
+    if (tmp[strlen(tmp)-1] == ',')
+        tmp[strlen(tmp)-1] = '\0';
+    if (tmp[0] == ';') /* comment */
+        type = COMMENT;
+    else if (tmp [0] == '\0') /* empty */
+        type =  EMPTY;
+    else if (tmp[strlen(tmp)-1] == ':')
+        type = LABEL;
+    else if (strcmp(tmp,".define") == 0)
+        type = DEFINE;
+    else if (getOpcode(opcodes, tmp) != UNKNOWN_OPERATOR) /* instruction */
+        type = INSTRUCTION;
+    else if (tmp [0] == '.') { /* directive sentence */
+        if (strcmp(tmp, ".extern") == 0) /* .extern */
+            type = EXTERN;
+        else if (strcmp(tmp, ".entry") == 0) /* .entry */
+            type =  ENTRY;
+        else if (strcmp(tmp, ".data") == 0)/* .data */
+            type =  DATA;
+        else if (strcmp(tmp, ".string") == 0)/* .string */
+            type =  STRING;
+        else
+            type = UNKNOWN_OPERATOR;
+    } else {
+        type = UNKNOWN_OPERATOR;
     }
-    return UNKNOWN_OPERATOR;
+    return type;
 }
 
 int getAddressingMode (char *operand){
@@ -116,6 +125,8 @@ int getAddressingMode (char *operand){
 /* returns opcode value if exist or UNKNOWN_OPERATOR if doesn't */
 int getOpcode(opcode_table *opcodes, char *token){
     int i;
+    if (token[strlen(token)-1] == ',')
+        return ILLEGAL_COMMA;
     for (i = 0; i < MAX_OPERATORS; ++i) {
         if (strcmp(token, opcodes->name[i]) == 0)
             return i;

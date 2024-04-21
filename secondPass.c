@@ -28,11 +28,11 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
         token = strtok(line, " \t");
         if (token == NULL)
             continue;
-        sentence = getSentence(op_table, token);
+        sentence = getSentence(op_table, token, lineNum);
         /* skip label declaration */
         if (sentence == LABEL) {
             token = strtok(NULL, " \t");
-            sentence = getSentence(op_table, token);
+            sentence = getSentence(op_table, token, lineNum);
         }
         /* opcode defined */
         if (sentence == INSTRUCTION) {
@@ -91,7 +91,9 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
             processDataDirective(token, img, symbols);
         }
     }
-    img->IC = img->code->address;
+    if (img->code != NULL) {
+        img->IC = img->code->address;
+    }
     /* add up counters */
     tmp = img->data_h;
     while (tmp != NULL){

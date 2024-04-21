@@ -29,13 +29,19 @@ int main(int argc, char *argv[]) {
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
         if (errorCode != SUCCESS){
             printError(errorCode,0);
-            exit(0);
+            continue;
         }
-            if ((errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE)) == SUCCESS) {  /* fill data tables and code mem_img */
-                if (secondPass(argv[i], img, opcodes, symbols) == SUCCESS) {  /* convert to binary than to base4 secure and write files */
-                    writeFiles(symbols, img, argv[i]);
-                }
-            }
+        errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
+        if (errorCode != SUCCESS){
+            continue;
+        }
+        errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
+        if (errorCode != SUCCESS){
+            continue;
+        }
+        writeFiles(symbols, img, argv[i]);
+
+
 
 
 
@@ -70,7 +76,7 @@ void printError(ErrorCode errorCode, int line){
         case UNKNOWN_REGISTER:
             fprintf(stdout,"Unknown register in line %d\n", line); break;
         case ILLEGAL_STRING_DATA:
-            fprintf(stdout,"Illegal character in line %d\n", line); break;
+            fprintf(stdout,"Illegal string declaration in line %d\n", line); break;
         case MISSING_COMMA:
             fprintf(stdout,"Missing comma in line %d\n", line); break;
         case REG_DOES_NOT_EXIST:
@@ -97,6 +103,10 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"WARNING: Empty label in line %d\n", line); break;
         case MULTIPLE_CONS_COMMAS:
             fprintf(stdout,"Multiple consecutive commas in line %d\n", line); break;
+        case ILLEGAL_DEF_DECLAR:
+            fprintf(stdout,"Illegal define declaration in line %d\n", line); break;
+        case ILLEGAL_DATA_DIRECT:
+            fprintf(stdout,"Illegal data declaration in line %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

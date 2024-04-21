@@ -1,7 +1,7 @@
 #include "header.h"
 
 /* the function is used to catch errors when opening a file */
-FILE * openFile(char *fileName, char *mode){
+FILE *openFile(char *fileName, char *mode) {
     FILE *file;
     file = fopen(fileName, mode);
     if (file == NULL) {
@@ -31,18 +31,18 @@ void *safeMalloc(size_t size) {
 
 
 /* converts a decimal value to binary and stores it in "array_size" bits in the "binary" array  */
-void decimalToBinary(int decimal, int *binary, int array_size){
+void decimalToBinary(int decimal, int *binary, int array_size) {
     int i, tmp = decimal;
     resetBits(binary, array_size);
     i = 0;
     /* positive value case */
-    while (tmp && i < array_size){
+    while (tmp && i < array_size) {
         binary[i] = tmp % 2;
         i++;
         tmp /= 2;
     }
     /* negative value case */
-    if(decimal < 0){
+    if (decimal < 0) {
         /* invert all digits */
         for (i = 0; i < array_size; i++) {
             binary[i] = binary[i] == 0 ? 1 : 0;
@@ -58,20 +58,20 @@ void decimalToBinary(int decimal, int *binary, int array_size){
 }
 
 /* converts the binary value to a base 4 encrypted value and writes it to the "result" array */
-void binaryToEncrypted4(const int *binary, char *result){
-    int i,j,res = 6;
-    int base4[4][2] = {{0,0},
-                       {0,1},
-                       {1,0},
-                       {1,1}};
+void binaryToEncrypted4(const int *binary, char *result) {
+    int i, j, res = 6;
+    int base4[4][2] = {{0, 0},
+                       {0, 1},
+                       {1, 0},
+                       {1, 1}};
 
-    int secure[] = {'*','#','%','!'};
+    int secure[] = {'*', '#', '%', '!'};
 
     result[7] = '\0';
     for (i = 0; i < WORD_L; i += 2) {
         for (j = 0; j < 4; ++j) {
-            if(base4[j][0] == binary[i+1] && base4[j][1] == binary[i]) {
-                result[res] = (char)secure[j];
+            if (base4[j][0] == binary[i + 1] && base4[j][1] == binary[i]) {
+                result[res] = (char) secure[j];
                 res--;
                 break;
             }
@@ -80,7 +80,7 @@ void binaryToEncrypted4(const int *binary, char *result){
 }
 
 /* sets array values to 0 */
-void resetBits(int *arr, int size){
+void resetBits(int *arr, int size) {
     int i;
     for (i = 0; i < size; ++i)
         arr[i] = 0;
@@ -96,28 +96,28 @@ char *strDuplicate(const char *src) {
 }
 
 /* deletes white spaces and removes newline character */
-char *deleteWhiteSpaces(char *token){
+char *deleteWhiteSpaces(char *token) {
     if (token[strlen(token) - 1] == '\n')
         token[strlen(token) - 1] = '\0';
 
     while (token[0] == ' ' || token[0] == '\t')
         token++;
-    while(token[strlen(token)-1] == ' ' || token[strlen(token)-1] == '\t')
-        token[strlen(token)-1] = '\0';
+    while (token[strlen(token) - 1] == ' ' || token[strlen(token) - 1] == '\t')
+        token[strlen(token) - 1] = '\0';
     return token;
 }
 
 /* returns non zero value in case if token is number */
-int isNumber(const char *token){
-    if(token[0] == '-' || token[0] == '+')
+int isNumber(const char *token) {
+    if (token[0] == '-' || token[0] == '+')
         return isdigit(token[1]);
     return isdigit(token[0]);
 }
 
 /* encrypts binary value to encrypted base 4 value */
-void cryptWords(word *wrd){
+void cryptWords(word *wrd) {
     word *tmp = wrd;
-    while (tmp != NULL){
+    while (tmp != NULL) {
         binaryToEncrypted4(tmp->binary, tmp->secure4);
         tmp = tmp->next;
     }
@@ -138,38 +138,38 @@ void addAddress(int **arr, int *size, int address) {
 }
 
 /* calls functions to write .ent, .ext, & .obj files */
-void writeFiles(list *symbols, mem_img *img, char *filename){
+void writeFiles(list *symbols, mem_img *img, char *filename) {
     createEntFile(symbols, filename);
     writeObjFile(img, filename);
 }
 
 /* writes .obj file */
-void writeObjFile(mem_img *img, char *filename){
+void writeObjFile(mem_img *img, char *filename) {
     FILE *objFile;
     char *newName;
     int IC;
     word *tmp;
-    newName = safeMalloc(sizeof (filename) + 4); /* +.ob + \0 */
+    newName = safeMalloc(sizeof(filename) + 4); /* +.ob + \0 */
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");
-    IC = img->IC-FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
+    IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
     fprintf(objFile, "%d %d\n", IC, img->DC);
     tmp = img->code_h;
-    while (tmp != NULL){
-        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+    while (tmp != NULL) {
+        fprintf(objFile, "%.4d %s\n", tmp->address, tmp->secure4);
         tmp = tmp->next;
     }
     tmp = img->data_h;
-    while (tmp != NULL){
-        fprintf(objFile, "%.4d %s\n",tmp->address, tmp->secure4);
+    while (tmp != NULL) {
+        fprintf(objFile, "%.4d %s\n", tmp->address, tmp->secure4);
         tmp = tmp->next;
     }
     free(newName);
 }
 
 /* write .ent & .ext file */
-int createEntFile(list *labels, char *fileName){
+int createEntFile(list *labels, char *fileName) {
     int isCorrect = 1, i;
     list *head;
     char ent_fileName[strlen(fileName) + 5]; /* .ent + '\0' */
@@ -180,19 +180,19 @@ int createEntFile(list *labels, char *fileName){
     strcat(ent_fileName, ".ent\0");
     strcat(ext_fileName, ".ext\0");
     head = labels;
-    while (head != NULL){
+    while (head != NULL) {
         if (head->isExternal) {
             if (ext == NULL)
                 ext = openFile(ext_fileName, "w");
             for (i = 0; i < head->addresses_size; ++i) {
-                fprintf(ext, "%s\t%.4d\n",head->name, head->addresses[i]);
+                fprintf(ext, "%s\t%.4d\n", head->name, head->addresses[i]);
             }
         }
         if (head->isEntry) {
-            if (strcmp(head->type,"entry") != 0) {
+            if (strcmp(head->type, "entry") != 0) {
                 if (ent == NULL)
                     ent = openFile(ent_fileName, "w");
-                fprintf(ent, "%s\t%.4d\n",head->name,head->value);
+                fprintf(ent, "%s\t%.4d\n", head->name, head->value);
             } else {
                 printError(UNDEFINED_ENTRY, 0);
                 isCorrect = 0;
@@ -208,29 +208,104 @@ int createEntFile(list *labels, char *fileName){
     return isCorrect;
 }
 
-int checkLine(char *line){
-    char *tmp = line;
-    char lastChar = tmp[strlen(tmp)-1];
-    char *buffer, *token;
-    if (lastChar == ',')
+int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
+    int opcode, i;
+    char *lastChar, *p;
+    char buffer[strlen(line) + 1], *token;
+    char operands_line[strlen(line) + 1];
+    char *src, *dst, *tmp = buffer;
+    SentenceType type;
+    strcpy(buffer, line);
+    strcpy(operands_line, line);
+    lastChar = &tmp[strlen(tmp) - 1];
+    line = deleteWhiteSpaces(line);
+    if (line[0] == ';')
+        return SUCCESS;
+    if ((*lastChar) == ',')
         return EXTRANEOUS_TEXT;
     if (strlen(tmp) > LINE_LENGTH)
         return TOO_LONG_LINE;
     while (tmp[0] == ' ')
         tmp++;
-    lastChar = tmp[0];
-    while (tmp[0] != '\0'){
+    lastChar = &tmp[0];
+    while (tmp[0] != '\0') {
         while (tmp[0] == ' ')
             tmp++;
         if (lastChar == ',' && tmp[0] == ',')
             return MULTIPLE_CONS_COMMAS;
-        lastChar = tmp[0];
+        lastChar = &tmp[0];
         tmp++;
+    }
+    tmp = buffer;
+    token = strtok(buffer, " \t");
+    type = getSentence(opcodes, token, lineNum);
+    if (token[strlen(tmp) - 1] == ',') {
+        return ILLEGAL_COMMA;
+    }
+    if (type == LABEL) {
+        p = &buffer[strlen(token) + 1]; /* move pointer to end of label declaration */
+        p = deleteWhiteSpaces(p);
+        token = strtok(NULL, " \t");
+        if (token[0] == ',')
+            return ILLEGAL_COMMA;
+        type = getSentence(opcodes, token, lineNum);
+        p = &p[strlen(token) + 1]; /* move pointer to end operator name */
+    } else {
+        p = &buffer[strlen(token) + 1]; /* move pointer to end operator name */
+    }
+    if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
+        tmp += strlen(token) + 1;
+        if (tmp[0] == ',')
+            return ILLEGAL_COMMA;
+    } else if (type == INSTRUCTION) {
+        opcode = getOpcode(opcodes, token);
+        if (opcode < 0) /* error case */
+            return opcode;
+        if (opcodes->max_ops[opcode] == 0) { /* operator with no operands */
+            token = strtok(NULL, " \t");
+            if (token != NULL)
+                return EXTRANEOUS_TEXT;
+        } else if (opcodes->max_ops[opcode] == 1) { /* operator with 1 operand */
+            token = strtok(NULL, " \t");
+            if (token == NULL)
+                return MISSING_OPERAND;
+            if (token[0] == ',')
+                return ILLEGAL_COMMA;
+            token = strtok(NULL, " ,\t");
+            if (token != NULL)
+                return EXTRANEOUS_TEXT;
+        } else if (opcodes->max_ops[opcode] == 2) { /* operator with two operands */
+            strcpy(operands_line, p);
+            token = strtok(NULL, " \t");
+            if (token == NULL)
+                return MISSING_OPERAND;
+            if (token[0] == ',')
+                return ILLEGAL_COMMA;
+            p = &token[strlen(token) + 1]; /* pointer to last operand */
+            p = deleteWhiteSpaces(p);
+            if (token[strlen(token) - 1] == ',' && token[strlen(token) - 2] == ',')
+                return MULTIPLE_CONS_COMMAS;
+            if (token[strlen(token) - 1] != ',' && p[0] != ',') {
+                token = strtok(operands_line, ",");
+                token = strtok(NULL, ",");
+                if (token == NULL)
+                    return MISSING_COMMA;
+            }
+            if (token[strlen(token) - 1] == ',' && p[0] == ',')
+                return MULTIPLE_CONS_COMMAS;
+            if (p[0] == ',')
+                p++;
+            p = deleteWhiteSpaces(p);
+            if (p[0] == ',')
+                return MULTIPLE_CONS_COMMAS;
+        }
+    } else {
+        return UNKNOWN_OPERATOR;
     }
     return SUCCESS;
 }
 
-int isSavedWord(char *name, opcode_table *opcodes){
+int isSavedWord(char *name, opcode_table *opcodes) {
     int i;
     for (i = 0; i < MAX_OPERATORS; ++i) {
         if (strcmp(name, opcodes->name[i]) == 0)
@@ -243,7 +318,7 @@ int isSavedWord(char *name, opcode_table *opcodes){
     return 0;
 }
 
-int isLegalName(char *name, opcode_table *opcodes){
+int isLegalName(char *name, opcode_table *opcodes) {
     int i;
     if (strlen(name) > LABEL_LENGTH)
         return TOO_LONG_NAME;
