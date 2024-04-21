@@ -55,14 +55,14 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
             resetBits(img->code->binary, WORD_L); /* turn off all bits in word */
             /* set addressing mode bits and get operand tokens */
             opcode = getOpcode(op_table, token);
-            if (op_table->max_ops[opcode] == 1) { /* only one operand is allowed */
+            if (op_table->operands_needed[opcode] == 1) { /* only one operand is allowed */
                 dst = codeAddressingMode(dst, img, DST_POS);
                 if (dst == NULL){
                     printError(MISSING_OPERAND, lineNum);
                     isCorrect = INCORRECT;
                     continue;
                 }
-            } else if (op_table->max_ops[opcode] == 2) { /* two operands allowed */
+            } else if (op_table->operands_needed[opcode] == 2) { /* two operands allowed */
                 src = codeAddressingMode(src, img, SRC_POS); /* code src addressing mode */
                 dst = codeAddressingMode(dst, img, DST_POS); /* code dst addressing mode */
                 if (src == NULL || dst == NULL){

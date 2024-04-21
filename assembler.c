@@ -139,7 +139,7 @@ void getOpTable(opcode_table *table, int max_registers) {
     }
 
     memcpy(table->name, name, sizeof(name));
-    memcpy(table->max_ops, operands_needed, sizeof(operands_needed));
+    memcpy(table->operands_needed, operands_needed, sizeof(operands_needed));
     memcpy(table->allowed_src, alwd_src, sizeof(alwd_src));
     memcpy(table->allowed_dst, alwd_dst, sizeof(alwd_dst));
 }

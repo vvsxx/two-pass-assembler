@@ -249,11 +249,11 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
         opcode = getOpcode(opcodes, token);
         if (opcode < 0) /* error case */
             return opcode;
-        if (opcodes->max_ops[opcode] == 0) { /* operator with no operands */
+        if (opcodes->operands_needed[opcode] == 0) { /* operator with no operands */
             token = strtok(NULL, " \t");
             if (token != NULL)
                 return EXTRANEOUS_TEXT;
-        } else if (opcodes->max_ops[opcode] == 1) { /* operator with 1 operand */
+        } else if (opcodes->operands_needed[opcode] == 1) { /* operator with 1 operand */
             token = strtok(NULL, " \t");
             if (token == NULL)
                 return MISSING_OPERAND;
@@ -262,7 +262,7 @@ int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
             token = strtok(NULL, " ,\t");
             if (token != NULL)
                 return EXTRANEOUS_TEXT;
-        } else if (opcodes->max_ops[opcode] == 2) { /* operator with two operands */
+        } else if (opcodes->operands_needed[opcode] == 2) { /* operator with two operands */
             strcpy(operands_line, p);
             token = strtok(NULL, " \t");
             if (token == NULL)

@@ -188,7 +188,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
 int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
 
-    for (j = 1; token != NULL && j <= opcodes->max_ops[opcode]; j++) { /* 'j' is operand number */
+    for (j = 1; token != NULL && j <= opcodes->operands_needed[opcode]; j++) { /* 'j' is operand number */
 
         token = strtok(NULL, " ,\t");
         token = deleteWhiteSpaces(token);
@@ -196,7 +196,7 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
             printError(ILLEGAL_COMMA, lineNum);
             token++;
         }
-        if (j > opcodes->max_ops[opcode])
+        if (j > opcodes->operands_needed[opcode])
             printError(EXTRANEOUS_TEXT, lineNum);
         if (j == 1)
             isReg = (token[0] == 'r' && isdigit(token[1]));
@@ -205,7 +205,7 @@ int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineN
             printError(addressingMode, lineNum);
             return INCORRECT;
         }
-        allowed_modes = (j == 1 && opcodes->max_ops[opcode] > 1 ? opcodes->allowed_src : opcodes->allowed_dst);
+        allowed_modes = (j == 1 && opcodes->operands_needed[opcode] > 1 ? opcodes->allowed_src : opcodes->allowed_dst);
         if (!IS_ALLOWED(allowed_modes, opcode, addressingMode))
             printError(ILLEGAL_OPERAND, lineNum);
         if (addressingMode == IMMEDIATE || addressingMode == DIRECT_MODE)
