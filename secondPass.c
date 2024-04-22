@@ -8,6 +8,8 @@ void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
 
+int errorCode; /* accessible only from this file */
+
 /*
  * Performs the second pass of the assembly process, generating the binary code and data section.
  * It processes each line of the ".am" file, codes instructions and data directives,
@@ -38,6 +40,7 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
     FILE *input;
     input = openFile(amFile, "r");
     while (fgets(line, sizeof(line), input) != NULL) {
+        errorCode = SUCCESS;
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " \t");
@@ -79,8 +82,8 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
                 if (getAddressingMode(src) == REGISTER_MODE && getAddressingMode(dst) == REGISTER_MODE) {
                     img->code = createWordNode(img->code, img->IC);
                     resetBits(img->code->binary, WORD_L);
-                    src_val = getOpValue(src, symbols);
-                    dst_val = getOpValue(dst, symbols);
+                    src_val = getOpValue(src, symbols, &errorCode);
+                    dst_val = getOpValue(dst, symbols, &errorCode);
                     decimalToBinary(src_val, &img->code->binary[SRC_REG_POS], REG_WORD_SIZE); /* code src bits */
                     decimalToBinary(dst_val, &img->code->binary[DST_POS], REG_WORD_SIZE); /* code dst bits */
                     img->IC++;
@@ -94,6 +97,8 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
         } else if (sentence == DATA || sentence == STRING) { /* data declaration found */
             processDataDirective(token, img, symbols);
         }
+        if (errorCode != SUCCESS)
+            printError(errorCode, lineNum);
     }
     if (img->code != NULL) {
         img->IC = img->code->address;
@@ -123,26 +128,22 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
     if (addr_mode == DIRECT_MODE) {
         pos = DST_POS;
         symbol = getElementByName(symbols, op);
+        if (symbol == NULL) {
+            errorCode = UNDEFINED_SYMBOL;
+            return;
+        }
         ARE = symbol->ARE;
         value = symbol->value;
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
         decimalToBinary(ARE, word, ARE_SIZE);
     } else if (addr_mode == IMMEDIATE) { /* # */
-        op++;
-        if (isalpha(op[0])){ /* value is symbol */
-            if ((symbol = getElementByName(symbols, &op[0])) != NULL){
-                value = symbol->value;
-            }
-        } else {
-            value = atoi(op);
-        }
+        value = getOpValue(op, symbols, &errorCode);
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
     } else if (addr_mode == REGISTER_MODE) { /* register */
         if (pos == SRC_POS) /* register src position is different */
             pos = SRC_REG_POS;
         value = atoi(&op[1]);
         decimalToBinary(value, &word[pos], REG_WORD_SIZE);
-
     } else if (addr_mode == INDEXED_MODE){ /* LABEL[x] */
         label = strDuplicate(op); /* get array name */
         index = strDuplicate(strchr(label, '[')); /* get array index */
@@ -154,7 +155,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         c = strchr(label, '[');
         (*c) = '\0';
         symbol = getElementByName(symbols, label);
-        value = getOpValue(label, symbols); /* get array address */
+        value = getOpValue(label, symbols, &errorCode); /* get array address */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
         ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
         decimalToBinary(ARE, word, ARE_SIZE); /* code ARE */
@@ -165,7 +166,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         img->code = createWordNode(img->code, img->IC);
         word = img->code->binary;
         resetBits(img->code->binary, WORD_L);
-        value = getOpValue(index, symbols); /* get index value */
+        value = getOpValue(index, symbols, &errorCode); /* get index value */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code index value */
         if ((symbol = getElementByName(symbols, index)) != NULL && symbol->isExternal)
             addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
@@ -219,7 +220,7 @@ void processDataDirective(char *token, mem_img *img, list *symbols) {
         while ((token = strtok(NULL, ",")) != NULL) {
             img->DC = img->data != NULL ? img->data->address + 1 : 1;
             img->data = createWordNode(img->data, img->DC);
-            decimalToBinary(getOpValue(token, symbols), img->data->binary, WORD_L);
+            decimalToBinary(getOpValue(token, symbols, &errorCode), img->data->binary, WORD_L);
             if ((symbol = getElementByName(symbols, token)) != NULL && symbol->isExternal)
                 addAddress(&symbol->addresses, &symbol->addresses_size, img->DC + img->IC);
             if (img->data_h == NULL)

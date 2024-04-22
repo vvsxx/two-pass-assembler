@@ -36,7 +36,7 @@ OperandType getOpType(char *token){
  * Receives the operand string and the pointer to the list of symbols table (labels and constants).
  * Returns the value of the operand if it's recognized and valid, or UNKNOWN_OPERATOR if it's unrecognized.
  */
-int getOpValue (char *op, list *symbols){
+int getOpValue (char *op, list *symbols, int *isCorrect){
     list *symbol;
     OperandType type = getOpType(op);
     op = deleteWhiteSpaces(op); /* delete white spaces */
@@ -45,14 +45,20 @@ int getOpValue (char *op, list *symbols){
         return atoi(op);
     } else if (type == IMMEDIATE_OP){ /* immediate mode number */
         op++; /* skip '#' */
-        if (op[0] == '-' || op[0] == '+')
+        if (isalpha(op[0])){ /* value is symbol */
+            if ((symbol = getElementByName(symbols, &op[0])) != NULL){
+                return symbol->value;
+            }
+        } else if (op[0] == '-' || op[0] == '+' || isdigit(op[0])) {
             return atoi(op);
+        }
     } else if (type == LABEL_OP) { /* label address or constant */
         if ((symbol = getElementByName(symbols, op)) != NULL){
             return symbol->value;
-            }
-        else
-            return UNKNOWN_OPERAND;
+        } else {
+            (*isCorrect) = UNDEFINED_SYMBOL;
+            return UNDEFINED_SYMBOL;
+        }
     } else if (type == ARRAY_INDEX){ /* array index  */
         op = strchr(op, '[');
         op[strlen(op)-1] = '\0'; /* delete square brackets */
@@ -60,15 +66,18 @@ int getOpValue (char *op, list *symbols){
         if (isNumber(op))
             return atoi(op);
         if (isalpha(op[0])) {
-            if ((symbol = getElementByName(symbols, op)) != NULL)
+            if ((symbol = getElementByName(symbols, op)) != NULL) {
                 return symbol->value;
-            else
-                return UNKNOWN_OPERAND;
+            } else {
+                (*isCorrect) = UNDEFINED_SYMBOL;
+                return UNDEFINED_SYMBOL;
+            }
         }
-    } else if (type == NUMBER_OP)
+    } else if (type == NUMBER_OP) {
         return atoi(op);
-
-    return UNKNOWN_OPERATOR;
+    }
+    (*isCorrect) = UNDEFINED_SYMBOL;
+    return UNDEFINED_SYMBOL;
 }
 
 /*
@@ -110,6 +119,7 @@ SentenceType getSentence(opcode_table *opcodes, char *token, int lineNum){
     } else {
         type = UNKNOWN_OPERATOR;
     }
+    free(tmp);
     return type;
 }
 

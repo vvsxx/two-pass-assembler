@@ -39,7 +39,7 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
         res = SUCCESS;
         lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
-        res = syntaxCheck(token, opcodes, lineNum);
+        res = checkLine(token, opcodes, lineNum);
         if (res != SUCCESS) {
             isCorrect = INCORRECT;
             printError(res, lineNum);

@@ -208,97 +208,90 @@ int createEntFile(list *labels, char *fileName) {
     return isCorrect;
 }
 
-int syntaxCheck(char *line, opcode_table *opcodes, int lineNum) {
-    int opcode;
-    char *lastChar, *p, *token;
+int checkLine(char *line, opcode_table *opcodes, int lineNum) {
+    int opcode, i;
+    int errorCode = SUCCESS;
+    char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
     char buffer[strlen(line) + 1];
-    char operands_line[strlen(line) + 1];
-    char *tmp = buffer;
     SentenceType type;
-    strcpy(buffer, line);
-    lastChar = &tmp[strlen(tmp) - 1];
     line = deleteWhiteSpaces(line);
-    if (line[0] == ';') /* skip comment line */
+    p = line;
+    while (p[0] != '\0') {
+        if (p[0] == ';') /* skip comment line */
+            p[0] = '\0';
+        p++;
+    }
+    if (line[0] == '\0') /* skip empty line */
         return SUCCESS;
-    if ((*lastChar) == ',')
-        return EXTRANEOUS_TEXT;
-    if (strlen(tmp) > LINE_LENGTH)
-        return TOO_LONG_LINE;
-    tmp = buffer;
+    if (line[strlen(line)-1] == ',')
+        return ILLEGAL_COMMA;
+    strcpy(buffer, line);
     token = strtok(buffer, " \t");
     type = getSentence(opcodes, token, lineNum);
-    if (token[strlen(tmp) - 1] == ',') {
-        return ILLEGAL_COMMA;
-    }
     if (type == LABEL) {
-        p = &buffer[strlen(token) + 1]; /* move pointer to end of label declaration */
-        p = deleteWhiteSpaces(p);
+        label = safeMalloc(strlen(token) * sizeof (char));
+        strcpy(label, token);
         token = strtok(NULL, " \t");
-        if (token[0] == ',')
-            return ILLEGAL_COMMA;
         type = getSentence(opcodes, token, lineNum);
-        p = &p[strlen(token) + 1]; /* move pointer to end operator name */
-    } else {
-        p = &buffer[strlen(token) + 1]; /* move pointer to end operator name */
     }
     if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
-        tmp += strlen(token) + 1;
-        if (tmp[0] == ',')
-            return ILLEGAL_COMMA;
+        errorCode =  SUCCESS; /* skip this case */
     } else if (type == INSTRUCTION) {
-        opcode = getOpcode(opcodes, token);
+        operator = safeMalloc(strlen(token) * sizeof (char));
+        strcpy(operator, token);
+        operands = safeMalloc(strlen(token) * sizeof(char));
+        p = strstr(line,operator);
+        p = deleteWhiteSpaces(&p[strlen(operator)]);
+        strcpy(operands,  p);
+        opcode = getOpcode(opcodes, operator);
         if (opcode < 0) /* error case */
-            return opcode;
+            errorCode =  opcode;
         if (opcodes->operands_needed[opcode] == 0) { /* operator with no operands */
-            token = strtok(NULL, " \t");
+            token = strtok(NULL, " ,\t");
             if (token != NULL)
-                return EXTRANEOUS_TEXT;
+                errorCode = EXTRANEOUS_TEXT;
         } else if (opcodes->operands_needed[opcode] == 1) { /* operator with 1 operand */
-            token = strtok(NULL, " \t");
+            token = strtok(operands, " ,\t");
             if (token == NULL)
-                return MISSING_OPERAND;
-            if (token[0] == ',')
-                return ILLEGAL_COMMA;
-            token = strtok(NULL, " ,\t");
+                errorCode = MISSING_OPERAND;
+            if (operands[0] == ',')
+                errorCode = ILLEGAL_COMMA;
+            token = strtok(NULL, ",");
             if (token != NULL)
-                return EXTRANEOUS_TEXT;
+                errorCode = EXTRANEOUS_TEXT;
         } else if (opcodes->operands_needed[opcode] == 2) { /* operator with two operands */
-            strcpy(operands_line, p);
-            token = strtok(NULL, " \t");
+            strcpy(buffer, operands);
+            token = strtok(operands, ","); /* get src */
             if (token == NULL)
-                return MISSING_OPERAND;
-            if (token[0] == ',')
-                return ILLEGAL_COMMA;
-            p = &token[strlen(token) + 1]; /* pointer to last operand */
-            p = deleteWhiteSpaces(p);
-            if (token[strlen(token) - 1] == ',' && token[strlen(token) - 2] == ',')
-                return MULTIPLE_CONS_COMMAS;
-            if (token[strlen(token) - 1] != ',' && p[0] != ',') {
-                token = strtok(operands_line, ",");
-                p = &token[strlen(token)]+1;
-                if (p[0] == ',')
-                    return MULTIPLE_CONS_COMMAS;
-                token = strtok(NULL, ",");
-                if (token == NULL)
-                    return MISSING_COMMA;
+                errorCode = MISSING_OPERAND;
+            if (token != NULL) {
+                if (token[0] == ',' || token[strlen(token) - 1] == ',')
+                    errorCode = ILLEGAL_COMMA;
             }
-            if (token[strlen(token) - 1] == ',' && p[0] == ',')
-                return MULTIPLE_CONS_COMMAS;
-            if (p[0] == ',')
-                p++;
-            p = deleteWhiteSpaces(p);
-            if (p[0] == ',')
-                return MULTIPLE_CONS_COMMAS;
-            token = strtok(operands_line, " ,\t");
-            token = strtok(NULL, " ,\t");
-            token = strtok(NULL, " ,\t");
-            if (token != NULL)
-                return EXTRANEOUS_TEXT;
+            token = strtok(NULL, ","); /* get dst */
+            if (token == NULL)
+                errorCode = MISSING_OPERAND;
+            if (token != NULL) {
+                if (token[0] == ',' || token[strlen(token) - 1] == ',')
+                    errorCode = ILLEGAL_COMMA;
+            }
+            token = strtok(buffer, " ,\t");
+            for (i = 1; token != NULL; i++) {
+                token = strtok(NULL, " ,\t");
+                if (i > opcodes->operands_needed[opcode])
+                    errorCode = EXTRANEOUS_TEXT;
+            }
         }
     } else {
-        return UNKNOWN_OPERATOR;
+        errorCode = UNKNOWN_OPERATOR;
     }
-    return SUCCESS;
+    if (label != NULL)
+        free(label);
+    if (operator != NULL)
+        free(operator);
+    if (operands != NULL)
+        free(operands);
+    return errorCode;
 }
 
 /*

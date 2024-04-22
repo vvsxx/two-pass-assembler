@@ -31,7 +31,7 @@ typedef enum {
     NUMBER_OP
 } OperandType;
 
-/* errors */
+/* error codes */
 typedef enum {
     INCORRECT = 0,
     UNKNOWN_OPERAND = (-1),
@@ -59,5 +59,6 @@ typedef enum {
     ILLEGAL_DEF_DECLAR = (-23),
     ILLEGAL_DATA_DIRECT = (-24),
     MISSING_OPERATOR = (-25),
-    ERROR_OPENING_FILE = (-26)
+    ERROR_OPENING_FILE = (-26),
+    UNDEFINED_SYMBOL = (-27)
 } ErrorCode;

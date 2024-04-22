@@ -74,6 +74,7 @@ void writeObjFile(mem_img *img, char *filename);
 void writeFiles(list *symbols, mem_img *img, char *filename);
 int syntaxCheck(char *line, opcode_table *opcodes, int lineNum);
 void addAddress(int **arr, int *size, int address);
-int getOpValue (char *op, list *symbols);
+int getOpValue (char *op, list *symbols, int *isCorrect);
 int isLegalName(char *name, opcode_table *opcodes);
 int isSavedWord(char *name, opcode_table *opcodes);
+int checkLine(char *line, opcode_table *opcodes, int lineNum);
