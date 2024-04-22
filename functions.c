@@ -114,29 +114,6 @@ int isNumber(const char *token) {
     return isdigit(token[0]);
 }
 
-/* encrypts binary value to encrypted base 4 value */
-void cryptWords(word *wrd) {
-    word *tmp = wrd;
-    while (tmp != NULL) {
-        binaryToEncrypted4(tmp->binary, tmp->secure4);
-        tmp = tmp->next;
-    }
-}
-
-/* saves the memory address where the symbol that was declared as external was used
- * for each new address allocates additional space in the symbol.addresses array */
-void addAddress(int **arr, int *size, int address) {
-    int newSize = (*size) + 1;
-    int *tmp = realloc(*arr, newSize * sizeof(int));
-    if (tmp == NULL) {
-        fprintf(stdout, "CRITICAL ERROR: Allocating memory failed\n");
-        exit(EXIT_FAILURE);
-    }
-    *arr = tmp;
-    (*arr)[newSize - 1] = address;
-    *size = newSize;
-}
-
 /* calls functions to write .ent, .ext, & .obj files */
 void writeFiles(list *symbols, mem_img *img, char *filename) {
     createEntFile(symbols, filename);

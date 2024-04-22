@@ -1,6 +1,6 @@
  .entry LIST
  .extern EX
-    .define sz = 2
+   .define sz = 2
 ; this is comment
 MAIN:    mov r7, LIST[sz]
 LOOP:    jmp     L1

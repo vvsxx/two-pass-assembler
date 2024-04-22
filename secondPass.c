@@ -1,26 +1,23 @@
 #include "header.h"
 
-/* functions accessible only from this file */
+/* functions and variables accessible only from this file */
 word * createWordNode(struct word *node, int addr);
 void codeWords(char *op, mem_img *img, list *symbols, int pos);
 void processDataDirective(char *token, mem_img *img, list *symbols);
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
-
-int errorCode; /* accessible only from this file */
+int errorCode; /* accessible only from this file, uses to detect logical problems in multiple functions */
 
 /*
  * Performs the second pass of the assembly process, generating the binary code and data section.
  * It processes each line of the ".am" file, codes instructions and data directives,
  * and handles operand addressing modes.
- *
  * Parameters:
  *   fileName: The name of the source file being processed.
  *   img: Pointer to the memory image structure containing binary code and data.
  *   op_table: Pointer to the opcode table containing binary values and addressing modes.
  *   symbols: Pointer to the list of symbols (labels and constants).
- *
  * Returns:
  *   SUCCESS if the second pass completes without errors, or 0 if an error occurs.
  */
@@ -97,8 +94,10 @@ int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbo
         } else if (sentence == DATA || sentence == STRING) { /* data declaration found */
             processDataDirective(token, img, symbols);
         }
-        if (errorCode != SUCCESS)
+        if (errorCode != SUCCESS) {
             printError(errorCode, lineNum);
+            isCorrect = INCORRECT;
+        }
     }
     if (img->code != NULL) {
         img->IC = img->code->address;
@@ -122,7 +121,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
     int *word = img->code->binary;
     int addr_mode, ARE, value = 0;
     char *label, *index, *c;
-    list *symbol;
+    list *symbol = NULL;
     addr_mode = getAddressingMode(op);
     /* operand is address of label */
     if (addr_mode == DIRECT_MODE) {
@@ -142,7 +141,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
     } else if (addr_mode == REGISTER_MODE) { /* register */
         if (pos == SRC_POS) /* register src position is different */
             pos = SRC_REG_POS;
-        value = atoi(&op[1]);
+        value = getOpValue(op, symbols, &errorCode);
         decimalToBinary(value, &word[pos], REG_WORD_SIZE);
     } else if (addr_mode == INDEXED_MODE){ /* LABEL[x] */
         label = strDuplicate(op); /* get array name */
@@ -155,12 +154,17 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         c = strchr(label, '[');
         (*c) = '\0';
         symbol = getElementByName(symbols, label);
+        if (symbol == NULL || strcmp(symbol->type, "entry") == 0) {
+            errorCode = UNDEFINED_SYMBOL;
+            return;
+        }
         value = getOpValue(label, symbols, &errorCode); /* get array address */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code address of label (indexed array) */
         ARE = symbol == NULL ? ARE_ABSOLUTE : symbol->ARE; /* set ARE */
         decimalToBinary(ARE, word, ARE_SIZE); /* code ARE */
-        if ((symbol = getElementByName(symbols, label)) != NULL && symbol->isExternal)
+        if (symbol->isExternal)
             addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
+
         img->IC++;
         /* create next word */
         img->code = createWordNode(img->code, img->IC);
@@ -168,8 +172,14 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         resetBits(img->code->binary, WORD_L);
         value = getOpValue(index, symbols, &errorCode); /* get index value */
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L); /* code index value */
-        if ((symbol = getElementByName(symbols, index)) != NULL && symbol->isExternal)
+        symbol = getElementByName(symbols, index);
+        if ((symbol == NULL && !isNumber(index)) || (symbol != NULL && strcmp(symbol->type, "entry") == 0)) {
+            errorCode = UNDEFINED_SYMBOL;
+            return;
+        }
+        if (symbol != NULL && symbol->isExternal)
             addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
+
         free(label);
         index--;
         free(index);
@@ -178,7 +188,6 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         addAddress(&symbol->addresses, &symbol->addresses_size, img->IC);
 
 }
-
 
 
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos){

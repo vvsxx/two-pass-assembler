@@ -109,6 +109,8 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"Illegal define declaration in line %d\n", line); break;
         case ILLEGAL_DATA_DIRECT:
             fprintf(stdout,"Illegal data declaration in line %d\n", line); break;
+        case UNDEFINED_SYMBOL:
+            fprintf(stdout,"Undefined symbol in line %d\n", line); break;
         default:
             fprintf(stdout,"Unknown error in line %d\n", line);
     }

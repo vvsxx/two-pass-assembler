@@ -122,4 +122,3 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
             fprintf(outputFile, "%s\n", buffer);
     }
 }
-
