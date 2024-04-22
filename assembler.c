@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-/* the function receives the error code and line number and displays a corresponding warning message. */
+/* receives error code and line number and displays a corresponding warning message. */
 void printError(ErrorCode errorCode, int line){
     switch (errorCode) {
         case UNKNOWN_OPERAND:
