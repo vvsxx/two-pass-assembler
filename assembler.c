@@ -15,7 +15,7 @@ char *filename;
  *   0 on successful execution, 1 if too few arguments are provided.
  */
 int main(int argc, char *argv[]) {
-    int i, errorCode;
+    int i, errorCode, isCorrect;
     op_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
@@ -36,17 +36,15 @@ int main(int argc, char *argv[]) {
         img->IC = 100;
         img->DC = 0;
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
-        if (errorCode != SUCCESS){
-            printError(errorCode,0);
+        if (errorCode != SUCCESS)
             continue;
-        }
-        errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
 
+        errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
         errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
         if (errorCode != SUCCESS){
             continue;
         }
-        writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
+        errorCode = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
 
         test(img);
 

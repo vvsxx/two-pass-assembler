@@ -36,6 +36,8 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     SentenceType sentence;
     FILE *input;
     input = openFile(amFile, "r");
+    if (input == NULL) /* can't open input file */
+        return INCORRECT;
     while (fgets(line, sizeof(line), input) != NULL) {
         errorCode = SUCCESS;
         lineNum++;

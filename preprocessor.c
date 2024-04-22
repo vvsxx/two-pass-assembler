@@ -24,6 +24,8 @@ int preProcessor(char *filename, op_table *opcodes) {
     strcpy(inputFileName, filename);
     strcat(inputFileName, ".as\0"); /* create input file name */
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
+    if (inputFile == NULL) /* can't open input file */
+        return INCORRECT;
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
     if (ch == EOF) /* if file is empty, stop here */
         return EMPTY_FILE;
@@ -31,6 +33,8 @@ int preProcessor(char *filename, op_table *opcodes) {
     strcpy(outputFileName, filename);
     strcat(outputFileName, ".am\0"); /* create output file name */
     outputFile = openFile(outputFileName, "w"); /* open output file for write */
+    if (outputFile == NULL) /* can't open output file */
+        return INCORRECT;
     macros_h = buildTable(inputFile, opcodes); /* build macros table */
     rewind(inputFile);
     writeFile(inputFile, outputFile, macros_h);

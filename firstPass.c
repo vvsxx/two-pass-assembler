@@ -1,7 +1,7 @@
 #include "header.h"
 
 /* functions accessible only from this file */
-list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *current, list *head, op_table *opcodes, int lineNum, int *isCorrect);
+list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *head, op_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
@@ -33,6 +33,8 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     strcpy(newFileName, fileName);
     strcat(newFileName, ".am");
     input = openFile(newFileName, "r");
+    if (input == NULL) /* can't open input file */
+        return INCORRECT;
     buffer = safeMalloc(sizeof (line));
     /* read each line from .am file */
     while (fgets(line, sizeof(line), input) != NULL){

@@ -1,5 +1,9 @@
 #include "header.h"
 
+/*
+ * General purpose functions
+ */
+
 /* the function is used to catch errors when opening a file */
 FILE *openFile(char *fileName, char *mode) {
     FILE *file;
@@ -13,8 +17,6 @@ FILE *openFile(char *fileName, char *mode) {
             fprintf(stderr, "File \"%s\" not found\n", fileName);
         else
             fprintf(stderr, "Error opening file %s\n", fileName);
-
-        exit(EXIT_FAILURE);
     }
     return file;
 }
@@ -114,14 +116,18 @@ int isNumber(const char *token) {
     return isdigit(token[0]);
 }
 
-/* calls functions to write .ent, .ext, & .obj files */
-void writeFiles(list *symbols, mem_img *img, char *filename) {
-    createEntFile(symbols, filename);
-    writeObjFile(img, filename);
+/* calls functions to write .ent, .ext, & .ob files */
+int writeFiles(list *symbols, mem_img *img, char *filename) {
+    int isCorrect = SUCCESS;
+    isCorrect = createEntFile(symbols, filename);
+    if (isCorrect != SUCCESS)
+        return isCorrect;
+    isCorrect = writeObjFile(img, filename);
+    return isCorrect;
 }
 
 /* writes .obj file */
-void writeObjFile(mem_img *img, char *filename) {
+int writeObjFile(mem_img *img, char *filename) {
     FILE *objFile;
     char *newName;
     int IC;
@@ -130,6 +136,8 @@ void writeObjFile(mem_img *img, char *filename) {
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");
+    if (objFile == NULL) /* can't open object file */
+        return INCORRECT;
     IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
     fprintf(objFile, "%d %d\n", IC, img->DC);
     tmp = img->code_h;
@@ -143,11 +151,12 @@ void writeObjFile(mem_img *img, char *filename) {
         tmp = tmp->next;
     }
     free(newName);
+    return  SUCCESS;
 }
 
 /* write .ent & .ext file */
 int createEntFile(list *labels, char *fileName) {
-    int isCorrect = 1, i;
+    int isCorrect = SUCCESS, i;
     list *head;
     char ent_fileName[strlen(fileName) + 5]; /* .ent + '\0' */
     char ext_fileName[strlen(fileName) + 5]; /* .ext + '\0' */
@@ -159,16 +168,22 @@ int createEntFile(list *labels, char *fileName) {
     head = labels;
     while (head != NULL) {
         if (head->isExternal) {
-            if (ext == NULL)
+            if (ext == NULL) {
                 ext = openFile(ext_fileName, "w");
+                if (ext == NULL) /* can't open externals file */
+                    return INCORRECT;
+            }
             for (i = 0; i < head->addresses_size; ++i) {
                 fprintf(ext, "%s\t%.4d\n", head->name, head->addresses[i]);
             }
         }
         if (head->isEntry) {
             if (strcmp(head->type, "entry") != 0) {
-                if (ent == NULL)
+                if (ent == NULL) {
                     ent = openFile(ent_fileName, "w");
+                    if (ext == NULL) /* can't open entries file */
+                        return INCORRECT;
+                }
                 fprintf(ent, "%s\t%.4d\n", head->name, head->value);
             } else {
                 printError(UNDEFINED_ENTRY, 0);
