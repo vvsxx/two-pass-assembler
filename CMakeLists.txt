@@ -8,7 +8,7 @@ add_executable(assembler assembler.c
         preprocessor.c
         list.c
         firstPass.c
-        Utilities.c
+        utilities.c
         structs.h
         secondPass.c
         typedef.h

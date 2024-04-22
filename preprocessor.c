@@ -19,13 +19,12 @@ int preProcessor(char *filename, op_table *opcodes) {
     FILE *inputFile, *outputFile;
     macros_list *macros_h = NULL;
     char ch;
-    char inputFileName[strlen(filename) + 4]; /* ".as/.am" + '\0' */
-    char outputFileName[strlen(filename) + 4];
+    int nameSize = strlen(filename) + 4; /* ".as/.am" + '\0' */
+    char inputFileName[nameSize];
+    char outputFileName[nameSize];
     strcpy(inputFileName, filename);
     strcat(inputFileName, ".as\0"); /* create input file name */
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
-    if (inputFile == NULL) /* can't open input file */
-        return INCORRECT;
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
     if (ch == EOF) /* if file is empty, stop here */
         return EMPTY_FILE;

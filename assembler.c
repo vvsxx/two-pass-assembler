@@ -78,7 +78,7 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: Illegal string declaration in line %d\n", filename, line); break;
         case MISSING_COMMA:
             fprintf(stdout,"%s: Missing comma in line %d\n", filename, line); break;
-        case REG_DOES_NOT_EXIST:
+        case ILLEGAL_REGISTER:
             fprintf(stdout,"%s: Register does not exist in line %d\n", filename, line); break;
         case UNDEFINED_ENTRY:
             fprintf(stdout,"%s: Undefined entry in line %d\n", filename,line); break;

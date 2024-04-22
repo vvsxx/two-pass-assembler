@@ -24,16 +24,17 @@ int errorCode; /* accessible only from this file, uses to detect logical problem
 int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     struct word *tmp; /* temporary pointer to process words */
     char line[LINE_LENGTH], *token; /* line processing */
-    char amFile[strlen(fileName) + 4]; /* ".am" + '\0' */
+    int fileNameSize = strlen(fileName) + 4;
+    char amFile[fileNameSize]; /* ".am" + '\0' */
     char *src, *dst; /* operands */
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
     int isCorrect = SUCCESS;
+    SentenceType sentence;
     list *symbol;
     strcpy(amFile, fileName);
     strcat(amFile, ".am");
-    SentenceType sentence;
     FILE *input;
     input = openFile(amFile, "r");
     if (input == NULL) /* can't open input file */

@@ -28,7 +28,8 @@ typedef enum {
     IMMEDIATE_OP,
     LABEL_OP,
     ARRAY_INDEX,
-    NUMBER_OP
+    NUMBER_OP,
+    REG_DOES_NOT_EXIST
 } OperandType;
 
 /* error codes */
@@ -46,7 +47,7 @@ typedef enum {
     UNKNOWN_REGISTER = (-10),
     MULTIPLE_CONS_COMMAS = (-11),
     MISSING_COMMA = (-12),
-    REG_DOES_NOT_EXIST = (-13),
+    ILLEGAL_REGISTER = (-13),
     ILLEGAL_LABEL_NAME = (-14),
     TOO_LONG_NAME = (-15),
     EMPTY_FILE = (-16),

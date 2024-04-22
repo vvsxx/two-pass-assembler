@@ -140,7 +140,7 @@ int getAddressingMode (char *operand){
     if (operand[0] == '\0')
         return UNKNOWN_OPERATOR;
     if (type == REG_DOES_NOT_EXIST)
-        return REG_DOES_NOT_EXIST;
+        return ILLEGAL_REGISTER;
     if (type == REGISTER) { /* register */
         return REGISTER_MODE;
     } else if (type == IMMEDIATE_OP){ /* immediate */

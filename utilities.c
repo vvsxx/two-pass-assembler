@@ -158,8 +158,9 @@ int writeObjFile(mem_img *img, char *filename) {
 int createEntFile(list *labels, char *fileName) {
     int isCorrect = SUCCESS, i;
     list *head;
-    char ent_fileName[strlen(fileName) + 5]; /* .ent + '\0' */
-    char ext_fileName[strlen(fileName) + 5]; /* .ext + '\0' */
+    int nameSize = strlen(fileName) + 5;
+    char ent_fileName[nameSize]; /* .ent + '\0' */
+    char ext_fileName[nameSize]; /* .ext + '\0' */
     FILE *ent = NULL, *ext = NULL;
     strcpy(ent_fileName, fileName);
     strcpy(ext_fileName, fileName);
@@ -181,7 +182,7 @@ int createEntFile(list *labels, char *fileName) {
             if (strcmp(head->type, "entry") != 0) {
                 if (ent == NULL) {
                     ent = openFile(ent_fileName, "w");
-                    if (ext == NULL) /* can't open entries file */
+                    if (ent == NULL) /* can't open entries file */
                         return INCORRECT;
                 }
                 fprintf(ent, "%s\t%.4d\n", head->name, head->value);
@@ -204,7 +205,8 @@ int checkLine(char *line, op_table *opcodes, int lineNum) {
     int opcode, i;
     int errorCode = SUCCESS;
     char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
-    char buffer[strlen(line) + 1];
+    int bufferSize = strlen(line) + 1;
+    char buffer[bufferSize];
     SentenceType type;
     line = deleteWhiteSpaces(line);
     p = line;

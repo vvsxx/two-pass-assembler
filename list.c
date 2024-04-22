@@ -1,5 +1,8 @@
 #include "header.h"
 
+/*
+ * linked list processing functions
+ */
 
 /* free memory */
 void freeSymList(struct list *p) {
