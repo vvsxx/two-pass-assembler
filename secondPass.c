@@ -21,7 +21,7 @@ int errorCode; /* accessible only from this file, uses to detect logical problem
  * Returns:
  *   SUCCESS if the second pass completes without errors, or 0 if an error occurs.
  */
-int secondPass(char *fileName, mem_img *img, opcode_table *op_table, list *symbols){
+int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     struct word *tmp; /* temporary pointer to process words */
     char line[LINE_LENGTH], *token; /* line processing */
     char amFile[strlen(fileName) + 4]; /* ".am" + '\0' */

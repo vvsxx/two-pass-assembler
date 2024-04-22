@@ -1,7 +1,7 @@
 #include "header.h"
 
 void test(mem_img *img);
-
+char *filename;
 /*
  * The main function of the two-pass assembler program.
  * It processes command line arguments, initializes data structures,
@@ -16,7 +16,7 @@ void test(mem_img *img);
  */
 int main(int argc, char *argv[]) {
     int i, errorCode;
-    opcode_table *opcodes; /* contains binary values and allowed addressing modes */
+    op_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
 
@@ -25,11 +25,12 @@ int main(int argc, char *argv[]) {
         printf("too few arguments, please enter al least 1 filename\n");
         return 1;
     }
-    opcodes = safeMalloc(sizeof (opcode_table)); /* create opcodes table */
+    opcodes = safeMalloc(sizeof (op_table)); /* create opcodes table */
     getOpTable(opcodes, MAX_REGISTERS); /* fill opcodes table */
 
     /* run assembler for each file */
     for (i = 1; i < argc; ++i) {
+        filename = argv[i];
         img = safeMalloc(sizeof (struct memory_image));
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
         img->IC = 100;
@@ -40,9 +41,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
-        if (errorCode != SUCCESS){
-            continue;
-        }
+
         errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
         if (errorCode != SUCCESS){
             continue;
@@ -66,58 +65,58 @@ int main(int argc, char *argv[]) {
 void printError(ErrorCode errorCode, int line){
     switch (errorCode) {
         case UNKNOWN_OPERAND:
-            fprintf(stdout,"Unknown operand in line %d\n", line); break;
+            fprintf(stdout,"%s: Unknown operand in line %d\n", filename, line); break;
         case UNKNOWN_OPERATOR:
-            fprintf(stdout,"Unknown operator in line %d\n", line); break;
+            fprintf(stdout,"%s: Unknown operator in line %d\n", filename, line); break;
         case ILLEGAL_OPERAND:
-            fprintf(stdout,"Illegal operand in line %d\n", line); break;
+            fprintf(stdout,"%s: Illegal operand in line %d\n", filename, line); break;
         case NOT_A_NUMBER:
-            fprintf(stdout,"Value is not a number in line %d\n", line); break;
+            fprintf(stdout,"%s: Value is not a number in line %d\n", filename, line); break;
         case EXTRANEOUS_TEXT:
-            fprintf(stdout,"Extraneous text in line %d\n", line); break;
+            fprintf(stdout,"%s: Extraneous text in line %d\n", filename, line); break;
         case UNKNOWN_REGISTER:
-            fprintf(stdout,"Unknown register in line %d\n", line); break;
+            fprintf(stdout,"%s: Unknown register in line %d\n", filename, line); break;
         case ILLEGAL_STRING_DATA:
-            fprintf(stdout,"Illegal string declaration in line %d\n", line); break;
+            fprintf(stdout,"%s: Illegal string declaration in line %d\n", filename, line); break;
         case MISSING_COMMA:
-            fprintf(stdout,"Missing comma in line %d\n", line); break;
+            fprintf(stdout,"%s: Missing comma in line %d\n", filename, line); break;
         case REG_DOES_NOT_EXIST:
-            fprintf(stdout,"Register does not exist in line %d\n", line); break;
+            fprintf(stdout,"%s: Register does not exist in line %d\n", filename, line); break;
         case UNDEFINED_ENTRY:
-            fprintf(stdout,"Undefined entry in line %d\n", line); break;
+            fprintf(stdout,"%s: Undefined entry in line %d\n", filename,line); break;
         case ILLEGAL_LABEL_NAME:
-            fprintf(stdout,"Illegal label name in line %d\n", line); break;
+            fprintf(stdout,"%s: Illegal label name in line %d\n", filename,line); break;
         case MULTIPLE_LABEL:
-            fprintf(stdout,"The label name repeats an existing one in line %d\n", line); break;
+            fprintf(stdout,"%s: The label name repeats an existing one in line %d\n", filename,line); break;
         case TOO_LONG_NAME:
-            fprintf(stdout,"Too long label name in line %d\n", line); break;
+            fprintf(stdout,"%s: Too long label name in line %d\n", filename,line); break;
         case OUT_OF_MEMORY:
-            fprintf(stdout,"Not enough memory - %d / 4096\n", line); break;
+            fprintf(stdout,"%s: Not enough memory - %d / 4096\n", filename,line); break;
         case MISSING_OPERAND:
-            fprintf(stdout,"Missing operand in line - %d\n", line); break;
+            fprintf(stdout,"%s: Missing operand in line - %d\n", filename,line); break;
         case ILLEGAL_COMMA:
-            fprintf(stdout,"Illegal comma in line - %d\n", line); break;
+            fprintf(stdout,"%s: Illegal comma in line - %d\n", filename,line); break;
         case ILLEGAL_MACRO_NAME:
-            fprintf(stdout,"Illegal macro name in line - %d\n", line); break;
+            fprintf(stdout,"%s: Illegal macro name in line - %d\n", filename, line); break;
         case EMPTY_FILE:
-            fprintf(stdout,"File is empty\n"); break;
+            fprintf(stdout,"%s: File is empty\n", filename); break;
         case EMPTY_LABEL:
-            fprintf(stdout,"WARNING: Empty label in line %d\n", line); break;
+            fprintf(stdout,"%s: WARNING: Empty label in line %d\n", filename,line); break;
         case MULTIPLE_CONS_COMMAS:
-            fprintf(stdout,"Multiple consecutive commas in line %d\n", line); break;
+            fprintf(stdout,"%s: Multiple consecutive commas in line %d\n", filename,line); break;
         case ILLEGAL_DEF_DECLAR:
-            fprintf(stdout,"Illegal define declaration in line %d\n", line); break;
+            fprintf(stdout,"%s: Illegal define declaration in line %d\n", filename,line); break;
         case ILLEGAL_DATA_DIRECT:
-            fprintf(stdout,"Illegal data declaration in line %d\n", line); break;
+            fprintf(stdout,"%s: Illegal data declaration in line %d\n", filename,line); break;
         case UNDEFINED_SYMBOL:
-            fprintf(stdout,"Undefined symbol in line %d\n", line); break;
+            fprintf(stdout,"%s: Undefined symbol in line %d\n", filename,line); break;
         default:
-            fprintf(stdout,"Unknown error in line %d\n", line);
+            fprintf(stdout,"%s: Unknown error in line %d\n", filename,line);
     }
 }
 
 /* contains static data to fill opcode table in start of program */
-void getOpTable(opcode_table *table, int max_registers) {
+void getOpTable(op_table *table, int max_registers) {
     int i;
     char name[MAX_OPERATORS][OPCODE_LENGTH] = {"mov", "cmp", "add", "sub",
                                                "not", "clr", "lea", "inc",

@@ -88,7 +88,7 @@ int getOpValue (char *op, list *symbols, int *isCorrect){
  *   lineNum: The line number in the source file.
  * Returns: The type of sentence (SentenceType).
  */
-SentenceType getSentence(opcode_table *opcodes, char *token, int lineNum){
+SentenceType getSentence(op_table *opcodes, char *token, int lineNum){
     SentenceType type;
     char *tmp = safeMalloc(strlen(token)+1);
     strcpy(tmp, token);
@@ -160,7 +160,7 @@ int getAddressingMode (char *operand){
  *   token: The token representing the instruction mnemonic.
  * Returns: The opcode decimal value, or UNKNOWN_OPERATOR if the token does not match any known instruction.
  */
-int getOpcode(opcode_table *opcodes, char *token){
+int getOpcode(op_table *opcodes, char *token){
     int i;
     if (token[strlen(token)-1] == ',')
         return ILLEGAL_COMMA;

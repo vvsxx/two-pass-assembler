@@ -1,9 +1,9 @@
 #include "header.h"
 
 /* functions accessible only from this file */
-list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect);
+list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *current, list *head, op_table *opcodes, int lineNum, int *isCorrect);
 int stringLine(char *token, int *isCorrect, int lineNum);
-int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum);
+int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
 
 /*
@@ -19,7 +19,7 @@ void processDirective(SentenceType type, int *DC, char *token, int lineNum, int 
  * Returns:
  *   SUCCESS if the first pass completes without errors, or an error code if an error occurs.
  */
-int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory){
+int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
@@ -64,7 +64,6 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
                 printError(EMPTY_LABEL, lineNum);
                 continue;
             }
-
             type = getSentence(opcodes, token, lineNum);
             if (type != ENTRY && type != EXTERN && token != NULL) {
                 symbols = processLabel(type, pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum,
@@ -111,7 +110,7 @@ int firstPass(char *fileName, list  *symbols, opcode_table *opcodes, int memory)
         }
         tmp = tmp->next;
     }
-    if ((mem_counter = (IC - FIRST_ADDRESS) + DC) > memory) {
+    if ((mem_counter = (IC - FIRST_ADDRESS) + DC) > memSize) {
         printError(OUT_OF_MEMORY, mem_counter);
         isCorrect = INCORRECT;;
     }
@@ -141,15 +140,12 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
-list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, opcode_table *opcodes, int lineNum, int *isCorrect){
+list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, op_table *opcodes, int lineNum, int *isCorrect){
     int opcode;
-    int errorCheck;
-    list *current, *tmp;
+    list *current = labels_last, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if ((errorCheck = isLegalName(labelName, opcodes)) != SUCCESS){
-        (*isCorrect) = INCORRECT;
+    if (((*isCorrect) = isLegalName(labelName, opcodes)) != SUCCESS)
         printError(ILLEGAL_LABEL_NAME, lineNum);
-    }
 
     if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
         if (strcmp(tmp->type, "entry") != 0) {
@@ -162,7 +158,6 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
         labels_last = createSymbol(labels_last, labelName, labelName, type);
         current = labels_last;
     }
-
     if (type == DATA || type == STRING){
         if (current->type == NULL)
             current->type = strDuplicate("data");
@@ -185,11 +180,10 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
 
 
 /*  */
-int processInstruction(char *token, opcode_table *opcodes, int opcode, int lineNum){
+int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
 
     for (j = 1; token != NULL && j <= opcodes->operands_needed[opcode]; j++) { /* 'j' is operand number */
-
         token = strtok(NULL, " ,\t");
         token = deleteWhiteSpaces(token);
         if (token[0] == ',' && j == 1){

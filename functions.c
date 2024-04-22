@@ -185,7 +185,7 @@ int createEntFile(list *labels, char *fileName) {
     return isCorrect;
 }
 
-int checkLine(char *line, opcode_table *opcodes, int lineNum) {
+int checkLine(char *line, op_table *opcodes, int lineNum) {
     int opcode, i;
     int errorCode = SUCCESS;
     char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
@@ -278,7 +278,7 @@ int checkLine(char *line, opcode_table *opcodes, int lineNum) {
  *     - ILLEGAL_LABEL_NAME if the name matches a saved word in the opcode table.
  *     - SUCCESS if the name does not match any saved word.
  */
-int isSavedWord(char *name, opcode_table *opcodes) {
+int isSavedWord(char *name, op_table *opcodes) {
     int i;
     for (i = 0; i < MAX_OPERATORS; ++i) {
         if (strcmp(name, opcodes->name[i]) == 0)
@@ -296,7 +296,7 @@ int isSavedWord(char *name, opcode_table *opcodes) {
  * Receives the name to be checked and pointer to the opcode table containing saved words.
  * Returns SUCCESS or error code in case that name is illegal;
  */
-int isLegalName(char *name, opcode_table *opcodes) {
+int isLegalName(char *name, op_table *opcodes) {
     int i;
     if (strlen(name) > LABEL_LENGTH)
         return TOO_LONG_NAME;

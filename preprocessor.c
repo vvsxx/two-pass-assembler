@@ -2,7 +2,7 @@
 
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
-macros_list *buildTable(FILE *input, opcode_table *opcodes);
+macros_list *buildTable(FILE *input, op_table *opcodes);
 
 /*
  * Pre-processes the source file by deploying macros and creating a ".am" file.
@@ -15,7 +15,7 @@ macros_list *buildTable(FILE *input, opcode_table *opcodes);
  *   SUCCESS if pre-processing is successful, EMPTY_FILE if the file is empty,
  *   or an error code if an error occurs during pre-processing.
  */
-int preProcessor(char *filename, opcode_table *opcodes) {
+int preProcessor(char *filename, op_table *opcodes) {
     FILE *inputFile, *outputFile;
     macros_list *macros_h = NULL;
     char ch;
@@ -41,7 +41,7 @@ int preProcessor(char *filename, opcode_table *opcodes) {
 }
 
 /* function creates macro table */
-macros_list *buildTable(FILE *input, opcode_table *opcodes) {
+macros_list *buildTable(FILE *input, op_table *opcodes) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];
     char buffer[LINE_LENGTH];

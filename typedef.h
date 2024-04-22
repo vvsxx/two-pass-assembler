@@ -1,5 +1,5 @@
 typedef struct macros_list macros_list;
-typedef struct opcode_table opcode_table; /* operators and binary values */
+typedef struct opcode_table op_table; /* operators and binary values */
 typedef struct list list;
 typedef struct memory_image mem_img;
 typedef struct word word;
