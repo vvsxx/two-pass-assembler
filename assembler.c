@@ -45,10 +45,12 @@ int main(int argc, char *argv[]) {
 
         errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
         errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
-        if (errorCode != SUCCESS){
+        if (errorCode != SUCCESS)
             continue;
-        }
+
         errorCode = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
+        if (errorCode != SUCCESS)
+            printError(errorCode,0);
 
         test(img);
 

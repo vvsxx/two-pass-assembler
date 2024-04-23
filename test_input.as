@@ -2,7 +2,7 @@
  .extern EX
     .define sz = 2
 ; this is comment
-MAIN:    mov r7, LIST[sz] ;his is comments comment; this is comment; this is comment; this is comment; this is comment
+MAIN:    mov r7, LIST[sz]
 LOOP:    jmp L1
 mcr m_mcr
 cmp r3, #sz

@@ -2,20 +2,18 @@
 
 /* functions accessible only from this file */
 list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *head, op_table *opcodes, int lineNum, int *isCorrect);
-int stringLine(char *token, int *isCorrect, int lineNum);
+int stringDefinition(char *token);
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
 
 /*
  * Performs the first pass of the assembly process, constructing the symbol table (labels and constants),
  * computing addresses for each label, checking for memory limits, and detecting syntax errors.
- *
  * Parameters:
  *   fileName: The name of the source file being processed.
  *   symbols: Pointer to the list of symbols (labels and constants).
  *   opcodes: Pointer to the opcode table containing static data about each operator.
  *   memory: Total memory available for the program.
- *
  * Returns:
  *   SUCCESS if the first pass completes without errors, or an error code if an error occurs.
  */
@@ -126,15 +124,21 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     return isCorrect;
 }
 
-
-int stringLine(char *token, int *isCorrect, int lineNum){
+/*
+ * Validates and calculates the length of a string literal.
+ * Param:  token: Pointer to the string literal token.
+ * Returns: Length of the string literal if it is valid, otherwise returns an error code.
+ */
+int stringDefinition(char *token){
     int DC = 1;
     if (token[0] != '\"'){
         return ILLEGAL_STRING_DATA;
     }
     token++;
     while (token[0] != '\"' && token[0] != '\0'){
-        DC++;
+        if (isprint(token[0])) {
+            DC++;
+        }
         token++;
     }
     if (token[0] != '\"'){
@@ -147,6 +151,22 @@ int stringLine(char *token, int *isCorrect, int lineNum){
     return DC;
 }
 
+/*
+ * Processes a label declaration, updating data and code counters accordingly.
+ * Checks the validity of the label name and updates the symbol table.
+ * Parameters:
+ *   type: Type of the sentence (DATA, STRING, or INSTRUCTION).
+ *   DC: Pointer to the data counter.
+ *   IC: Pointer to the instruction counter.
+ *   labelName: Name of the label.
+ *   token: Token containing the instruction or data statement.
+ *   labels_last: Pointer to the last symbol in the symbol table.
+ *   labels_head: Pointer to the head of the symbol table.
+ *   opcodes: Pointer to the opcode table.
+ *   lineNum: Line number of the label declaration.
+ *   isCorrect: Pointer to the error flag.
+ * Returns: Pointer to the last symbol in the updated symbol table.
+ */
 list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, op_table *opcodes, int lineNum, int *isCorrect){
     int opcode;
     list *current = labels_last, *tmp;
@@ -186,7 +206,14 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
 }
 
 
-/*  */
+/*
+ * Processes an instruction statement, checking the validity of operands and updating the instruction counter.
+ *   token: Token containing the instruction statement.
+ *   opcodes: Pointer to the opcode table.
+ *   opcode: Decimal value of the opcode.
+ *   lineNum: Line number of the instruction statement.
+ *  Returns: Updated instruction counter value (must be positive) if processing is successful, otherwise returns an error code (negative value).
+ */
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum){
     int j, addressingMode, (*allowed_modes)[MAX_MODES], isReg = 0, IC = 0;
 
@@ -223,11 +250,20 @@ int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum){
     return IC;
 }
 
+/*
+ * Processes a directive statement, such as .data or .string, and updates the data counter accordingly.
+ *   type: Type of the directive statement.
+ *   DC: Pointer to the data counter.
+ *   token: Token containing the data for the directive.
+ *   lineNum: Line number of the directive statement.
+ *   errorCheck: Pointer to the error flag.
+ */
 void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck){
     int res;
     if (type == STRING) {
-        token = strtok(NULL, " \t");
-        res = stringLine(token, errorCheck, lineNum);
+        token = &token[strlen(token)+1];
+        token = deleteWhiteSpaces(token);
+        res = stringDefinition(token);
         if (res > 0) {
             (*DC) += res;
         } else {

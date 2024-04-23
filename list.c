@@ -4,7 +4,7 @@
  * linked list processing functions
  */
 
-/* free memory */
+/* Frees the memory allocated for a linked list of symbols */
 void freeSymList(struct list *p) {
     struct list *tmp;
     while (p != NULL) {
@@ -18,13 +18,14 @@ void freeSymList(struct list *p) {
         if (p->addresses != NULL) {
             free(p->addresses);
         }
-        if (p != NULL) {
-            free(p);
-        }
+
+        free(p);
+
         p = tmp;
     }
 }
 
+/* Frees the memory allocated for a linked list of words */
 void freeWordList(struct word *head) {
     while (head != NULL) {
         word *temp = head;
@@ -33,11 +34,10 @@ void freeWordList(struct word *head) {
             free(temp->binary);
         if (temp->secure4 != NULL)
             free(temp->secure4);
-
         free(temp);
     }
 }
-
+/* Frees the memory allocated for a linked list of macros */
 void freeMacList(struct macros_list *head) {
     int i;
     struct macros_list *temp;
@@ -53,6 +53,11 @@ void freeMacList(struct macros_list *head) {
     }
 }
 
+/*
+ * Calls to specific function to free memory allocated for a specific type of linked list.
+ *   node: Pointer to the head of the linked list.
+ *   type: Type of the linked list (SYMBOL_LIST, MACROS_LIST, WORD_LIST).
+ */
 void freeList(void *node, ListType type) {
     struct list *sym_p;
     struct word *word_p;
@@ -76,11 +81,19 @@ void freeList(void *node, ListType type) {
     }
 }
 
+/*
+ * Creates a new symbol node and adds it to the symbol list.
+ *   list: Pointer to the head of the symbol list.
+ *   token: Name of the symbol.
+ *   line: Line containing the symbol definition.
+ *   type: Type of the symbol (DEFINE, ENTRY, EXTERN, INSTRUCTION).
+ *  Returns pointer to the new node.
+ */
 list * createSymbol(struct list *list, char *token, char *line, SentenceType type){
     if (type == DEFINE) {
         line = strstr(line, ".define");
         line += strlen(".define");
-        token = strtok(line, "="); /* УБРАТЬ ЦИФРЫ */
+        token = strtok(line, "=");
     }
     if (list == NULL) {
         list = safeMalloc(sizeof(struct list));
@@ -120,7 +133,12 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
         return list;
 }
 
-/* searches for list element, returns pointer if element found */
+/*
+ * Retrieves a node from a linked list by its name.
+ *   listHead: Pointer to the head of the linked list.
+ *   string: Name to search for.
+ * Returns pointer to the node with the matching name, or NULL if not found.
+ */
 struct list *getElementByName(struct list *listHead, char *string) {
     struct list *current = listHead;
     while (current != NULL) {
@@ -131,7 +149,12 @@ struct list *getElementByName(struct list *listHead, char *string) {
     return NULL;
 }
 
-
+/*
+ * Retrieves a macro node from a linked list by its name.
+ *   listHead: Pointer to the head of the linked list.
+ *   string: Name to search for.
+ * Returns pointer to the macro node with the matching name, or NULL if not found.
+ */
 struct macros_list *getMacroByName(struct macros_list *listHead, char *string) {
     struct macros_list *current = listHead;
     while (current != NULL) {
@@ -144,9 +167,14 @@ struct macros_list *getMacroByName(struct macros_list *listHead, char *string) {
 
 
 
-
+/*
+ * Creates a new word node and adds it to the linked list of words.
+ *   node: Pointer to the previous word node.
+ *   addr: Decimal address.
+ *  Returns pointer to the new node.
+ */
 word * createWordNode(struct word *node, int addr){
-    word *tmp = node == NULL ? node : node->next;
+    word *tmp;
     tmp = (struct word *) safeMalloc(sizeof(struct word));
     tmp->next = NULL;
     tmp->binary = (int*)safeMalloc(WORD_L * sizeof(int));

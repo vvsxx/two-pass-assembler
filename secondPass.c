@@ -216,7 +216,7 @@ char * codeAddressingMode(char *op, mem_img *img, int pos){
 void processDataDirective(char *token, mem_img *img, list *symbols) {
     list *symbol;
     if (strcmp(token, ".string") == 0) {
-        token = strtok(NULL, " ");
+        token = &token[strlen(token)+1];
         token = strchr(token, '\"');
         token++;
         while (strlen(token) > 1){
