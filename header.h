@@ -76,4 +76,4 @@ void addAddress(int **arr, int *size, int address);
 int getOpValue (char *op, list *symbols, int *isCorrect);
 int isLegalName(char *name, op_table *opcodes);
 int isSavedWord(char *name, op_table *opcodes);
-int checkLine(char *line, op_table *opcodes, int lineNum);
+int syntaxCheck(char *line, op_table *opcodes, int lineNum);

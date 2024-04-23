@@ -11,7 +11,7 @@ OperandType getOpType(char *token){
     token = deleteWhiteSpaces(token);
     if (token[0] == 'r' && isdigit(token[1])){ /* REGISTER, */
         if (!IS_REGISTER(atoi(&token[1])))
-            return REG_DOES_NOT_EXIST;
+            return ILLEGAL_REGISTER;
         else
             return REGISTER;
     } else if (token[0] == '#') { /* DIRECT */

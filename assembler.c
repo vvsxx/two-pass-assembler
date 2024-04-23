@@ -15,7 +15,7 @@ char *filename;
  *   0 on successful execution, 1 if too few arguments are provided.
  */
 int main(int argc, char *argv[]) {
-    int i, errorCode, isCorrect;
+    int i, errorCode;
     op_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
@@ -35,6 +35,10 @@ int main(int argc, char *argv[]) {
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
         img->IC = 100;
         img->DC = 0;
+        img->data_h = NULL;
+        img->code_h = NULL;
+        img->code = NULL;
+        img->data = NULL;
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
         if (errorCode != SUCCESS)
             continue;
@@ -108,6 +112,8 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: Illegal data declaration in line %d\n", filename,line); break;
         case UNDEFINED_SYMBOL:
             fprintf(stdout,"%s: Undefined symbol in line %d\n", filename,line); break;
+        case TOO_LONG_LINE:
+            fprintf(stdout,"%s: WARNING: Line %d is longer than %d characters. Extra characters will be ignored.\n", filename,line, LINE_LENGTH); break;
         default:
             fprintf(stdout,"%s: Unknown error in line %d\n", filename,line);
     }

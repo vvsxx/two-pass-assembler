@@ -132,7 +132,7 @@ int writeObjFile(mem_img *img, char *filename) {
     char *newName;
     int IC;
     word *tmp;
-    newName = safeMalloc(sizeof(filename) + 4); /* +.ob + \0 */
+    newName = safeMalloc(strlen(filename) + 4); /* +.ob + \0 */
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");
@@ -159,8 +159,8 @@ int createEntFile(list *labels, char *fileName) {
     int isCorrect = SUCCESS, i;
     list *head;
     int nameSize = strlen(fileName) + 5;
-    char ent_fileName[nameSize]; /* .ent + '\0' */
-    char ext_fileName[nameSize]; /* .ext + '\0' */
+    char *ent_fileName = safeMalloc(nameSize * sizeof (int)); /* .ent + '\0' */
+    char *ext_fileName = safeMalloc(nameSize * sizeof (int)); /* .ext + '\0' */
     FILE *ent = NULL, *ext = NULL;
     strcpy(ent_fileName, fileName);
     strcpy(ext_fileName, fileName);
@@ -198,15 +198,17 @@ int createEntFile(list *labels, char *fileName) {
         fclose(ent);
     if (ext != NULL)
         fclose(ext);
+    free(ent_fileName);
+    free(ext_fileName);
     return isCorrect;
 }
 
-int checkLine(char *line, op_table *opcodes, int lineNum) {
+int syntaxCheck(char *line, op_table *opcodes, int lineNum) {
     int opcode, i;
     int errorCode = SUCCESS;
     char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
     int bufferSize = strlen(line) + 1;
-    char buffer[bufferSize];
+    char *buffer = safeMalloc(bufferSize * sizeof (char));
     SentenceType type;
     line = deleteWhiteSpaces(line);
     p = line;
@@ -215,15 +217,19 @@ int checkLine(char *line, op_table *opcodes, int lineNum) {
             p[0] = '\0';
         p++;
     }
-    if (line[0] == '\0') /* skip empty line */
+    if (line[0] == '\0') { /* skip empty line */
+        free(buffer);
         return SUCCESS;
-    if (line[strlen(line)-1] == ',')
+    }
+    if (line[strlen(line)-1] == ',') {
+        free(buffer);
         return ILLEGAL_COMMA;
+    }
     strcpy(buffer, line);
     token = strtok(buffer, " \t");
     type = getSentence(opcodes, token, lineNum);
     if (type == LABEL) {
-        label = safeMalloc(strlen(token) * sizeof (char));
+        label = safeMalloc((strlen(token)+1) * sizeof (char));
         strcpy(label, token);
         token = strtok(NULL, " \t");
         type = getSentence(opcodes, token, lineNum);
@@ -231,11 +237,11 @@ int checkLine(char *line, op_table *opcodes, int lineNum) {
     if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
         errorCode =  SUCCESS; /* skip this case */
     } else if (type == INSTRUCTION) {
-        operator = safeMalloc(strlen(token) * sizeof (char));
+        operator = safeMalloc((strlen(token)+1) * sizeof(char));
         strcpy(operator, token);
-        operands = safeMalloc(strlen(token) * sizeof(char));
         p = strstr(line,operator);
         p = deleteWhiteSpaces(&p[strlen(operator)]);
+        operands = safeMalloc(((strlen(p)+1) * sizeof(char)));
         strcpy(operands,  p);
         opcode = getOpcode(opcodes, operator);
         if (opcode < 0) /* error case */
@@ -285,6 +291,7 @@ int checkLine(char *line, op_table *opcodes, int lineNum) {
         free(operator);
     if (operands != NULL)
         free(operands);
+    free(buffer);
     return errorCode;
 }
 

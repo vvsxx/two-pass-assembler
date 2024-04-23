@@ -39,12 +39,13 @@ void freeWordList(struct word *head) {
 }
 
 void freeMacList(struct macros_list *head) {
+    int i;
     struct macros_list *temp;
     while (head != NULL) {
         temp = head;
         head = head->next;
         free(temp->name);
-        for (int i = 0; i <= temp->lines; ++i) {
+        for (i = 0; i <= temp->lines; ++i) {
             free(temp->data[i]);
         }
         free(temp->data);

@@ -20,8 +20,8 @@ int preProcessor(char *filename, op_table *opcodes) {
     macros_list *macros_h = NULL;
     char ch;
     int nameSize = strlen(filename) + 4; /* ".as/.am" + '\0' */
-    char inputFileName[nameSize];
-    char outputFileName[nameSize];
+    char *inputFileName = safeMalloc(nameSize * sizeof (int));
+    char *outputFileName = safeMalloc(nameSize * sizeof (int));
     strcpy(inputFileName, filename);
     strcat(inputFileName, ".as\0"); /* create input file name */
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
@@ -40,6 +40,8 @@ int preProcessor(char *filename, op_table *opcodes) {
     freeList(macros_h, MACROS_LIST);
     fclose(outputFile);
     fclose(inputFile);
+    free(inputFileName);
+    free(outputFileName);
     return SUCCESS;
 }
 
@@ -50,8 +52,13 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
     char buffer[LINE_LENGTH];
     char *token;
     int isCorrect = SUCCESS;
-    int i, lineNum = 0, isMacro = 0;
-    while (fgets(line, sizeof(line), input) != NULL) {
+    int i, c, lineNum = 0, isMacro = 0;
+    while (fgets(line, LINE_LENGTH, input) != NULL) {
+        /* if line is longer than LINE_LENGTH characters */
+        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n') {
+            printError(TOO_LONG_LINE, lineNum); /* print alert */
+            while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
+        }
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
@@ -83,7 +90,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
             macros->lines = i + 1;
             i--;
         } else if (isMacro && strcmp(token, "endmcr") != 0) { /* inside macro declaration */
-            macros->data[i] = safeMalloc(LINE_LENGTH * sizeof(char));
+            macros->data[i] = safeMalloc((LINE_LENGTH + 1) * sizeof(char));
             strcat(macros->data[i], buffer);
         } else if (strcmp(token, "endmcr") == 0) { /* end of macro declaration found */
             isMacro = 0;
@@ -100,8 +107,13 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char line[LINE_LENGTH], buffer[LINE_LENGTH], *token; /* line processing */
     char *data;
     macros_list *macros = NULL;
-    int i, macroDec = 0;
+    int i, c, macroDec = 0;
     while (fgets(line, sizeof(line), inputFile) != NULL) {
+        /* if line is longer than LINE_LENGTH characters */
+        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n') {
+            /* skip extra characters */
+            while ((c = fgetc(inputFile)) != '\n' && c != EOF);
+        }
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
         token = strtok(line, " \t");

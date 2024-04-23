@@ -25,17 +25,16 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     struct word *tmp; /* temporary pointer to process words */
     char line[LINE_LENGTH], *token; /* line processing */
     int fileNameSize = strlen(fileName) + 4;
-    char amFile[fileNameSize]; /* ".am" + '\0' */
+    char *amFile = safeMalloc(fileNameSize * sizeof (int)); /* ".am" + '\0' */
     char *src, *dst; /* operands */
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
     int isCorrect = SUCCESS;
     SentenceType sentence;
-    list *symbol;
+    FILE *input;
     strcpy(amFile, fileName);
     strcat(amFile, ".am");
-    FILE *input;
     input = openFile(amFile, "r");
     if (input == NULL) /* can't open input file */
         return INCORRECT;
@@ -115,6 +114,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     cryptWords(img->code_h);
     cryptWords(img->data_h);
     fclose(input);
+    free(amFile);
     return isCorrect;
 }
 

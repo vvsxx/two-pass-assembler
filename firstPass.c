@@ -22,11 +22,11 @@ void processDirective(SentenceType type, int *DC, char *token, int lineNum, int 
 int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     list *tmp, *symbols_head = symbols; /* list processing */
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
-    char newFileName[strlen(fileName) + 4]; /* ".am" + '\0' */
+    char *newFileName = safeMalloc((strlen(fileName) + 4) * sizeof (int)); /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
     int IC = FIRST_ADDRESS, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
     int isCorrect = 1, res; /* errors flag */
-    int *pIC = &IC, *pDC = &DC, *p_isCorrect = &isCorrect; /* pointers */
+    int *pIC = &IC, *pDC = &DC; /* pointers */
     int opcode; /* opcode decimal value */
     SentenceType type;
     FILE *input;
@@ -35,13 +35,13 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     input = openFile(newFileName, "r");
     if (input == NULL) /* can't open input file */
         return INCORRECT;
-    buffer = safeMalloc(sizeof (line));
+    buffer = safeMalloc(LINE_LENGTH);
     /* read each line from .am file */
-    while (fgets(line, sizeof(line), input) != NULL){
+    while (fgets(line, LINE_LENGTH-1, input) != NULL){
         res = SUCCESS;
         lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
-        res = checkLine(token, opcodes, lineNum);
+        res = syntaxCheck(token, opcodes, lineNum);
         if (res != SUCCESS) {
             isCorrect = INCORRECT;
             printError(res, lineNum);
@@ -118,6 +118,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     }
     free(buffer);
     fclose(input);
+    free(newFileName);
     return isCorrect;
 }
 
