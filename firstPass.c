@@ -24,6 +24,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     char line[LINE_LENGTH], *buffer, *token; /* line processing */
     char *newFileName = safeMalloc((strlen(fileName) + 4) * sizeof (int)); /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
+    char c;
     int IC = FIRST_ADDRESS, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
     int isCorrect = 1, res; /* errors flag */
     int *pIC = &IC, *pDC = &DC; /* pointers */
@@ -38,6 +39,9 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     buffer = safeMalloc(LINE_LENGTH);
     /* read each line from .am file */
     while (fgets(line, LINE_LENGTH-1, input) != NULL){
+        if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
+            while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
+
         res = SUCCESS;
         lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */

@@ -53,9 +53,9 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
     char *token;
     int isCorrect = SUCCESS;
     int i, c, lineNum = 0, isMacro = 0;
-    while (fgets(line, LINE_LENGTH, input) != NULL) {
+    while (fgets(line, LINE_LENGTH-1, input) != NULL) {
         /* if line is longer than LINE_LENGTH characters */
-        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n') {
+        if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n') {
             printError(TOO_LONG_LINE, lineNum); /* print alert */
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
         }
