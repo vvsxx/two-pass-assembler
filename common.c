@@ -111,9 +111,26 @@ char *deleteWhiteSpaces(char *token) {
 
 /* returns non zero value in case if token is number */
 int isNumber(const char *token) {
-    if (token[0] == '-' || token[0] == '+')
-        return isdigit(token[1]);
-    return isdigit(token[0]);
+    /* empty value */
+    if (*token == '\0') {
+        return 0;
+    }
+    /* first character must be digit ro + or - */
+    if (!isdigit(*token) && *token != '+' && *token != '-') {
+        return 0;
+    }
+    /* move to the next character in case of + or - */
+    if (*token == '+' || *token == '-') {
+        token++;
+    }
+    /* check that all characters are digits */
+    while (*token != '\0') {
+        if (!isdigit(*token)) {
+            return 0;
+        }
+        token++;
+    }
+    return 1;
 }
 
 /* calls functions to write .ent, .ext, & .ob files */

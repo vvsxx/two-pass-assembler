@@ -34,7 +34,7 @@ OperandType getOpType(char *token){
 /*
  * Retrieves the value of the operand based on its type and representation.
  * Receives the operand string and the pointer to the list of symbols table (labels and constants).
- * Returns the value of the operand if it's recognized and valid, or UNKNOWN_OPERATOR if it's unrecognized.
+ * Returns the value of the operand if it's recognized and valid, or flags error if it's unrecognized.
  */
 int getOpValue (char *op, list *symbols, int *isCorrect){
     list *symbol;
