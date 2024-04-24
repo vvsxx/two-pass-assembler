@@ -30,7 +30,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
-    int isCorrect = SUCCESS;
+    isCorrect = SUCCESS;
     SentenceType sentence;
     FILE *input;
     strcpy(amFile, fileName);
@@ -41,7 +41,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     while (fgets(line, LINE_LENGTH-1, input) != NULL) {
         if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
-        isCorrect = SUCCESS;
+
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " \t");
@@ -98,7 +98,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
         } else if (sentence == DATA || sentence == STRING) { /* data declaration found */
             processDataDirective(token, img, symbols);
         }
-        if (isCorrect != SUCCESS) {
+        if (isCorrect != SUCCESS && isCorrect != INCORRECT) {
             printError(isCorrect, lineNum);
             isCorrect = INCORRECT;
         }

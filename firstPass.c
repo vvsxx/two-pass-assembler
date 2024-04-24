@@ -166,9 +166,10 @@ int stringDefinition(char *token){
  */
 list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, op_table *opcodes, int lineNum){
     int opcode;
+    int errorCheck = SUCCESS;
     list *current = labels_last, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if ((isCorrect = isLegalName(labelName, opcodes)) != SUCCESS)
+    if ((errorCheck = isLegalName(labelName, opcodes)) != SUCCESS)
         printError(ILLEGAL_LABEL_NAME, lineNum);
 
     if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
@@ -228,6 +229,7 @@ int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum){
         addressingMode = getAddressingMode(token);
         if (addressingMode < 0) { /* ERROR */
             printError(addressingMode, lineNum);
+            isCorrect = INCORRECT;
             return INCORRECT;
         }
         allowed_modes = (j == 1 && opcodes->operands_needed[opcode] > 1 ? opcodes->allowed_src : opcodes->allowed_dst);

@@ -27,7 +27,7 @@ static char *filename; /* contains current filename */
  *   0 on successful execution, 1 if too few arguments are provided.
  */
 int main(int argc, char *argv[]) {
-    int i, errorCode;
+    int i, isCorrect, errorCode;
     op_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
@@ -41,6 +41,8 @@ int main(int argc, char *argv[]) {
 
     /* run assembler for each file */
     for (i = 1; i < argc; ++i) {
+        errorCode = SUCCESS;
+        isCorrect = SUCCESS;
         filename = argv[i];
         img = safeMalloc(sizeof (struct memory_image));
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
@@ -51,17 +53,20 @@ int main(int argc, char *argv[]) {
         img->code = NULL;
         img->data = NULL;
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
-        if (errorCode != SUCCESS)
-            continue;
-
+        if (errorCode != SUCCESS) {
+            isCorrect = INCORRECT;
+        }
         errorCode = firstPass(argv[i], symbols, opcodes, (MEMORY_SIZE - FIRST_ADDRESS));  /* fill data tables and code mem_img */
+        if (errorCode != SUCCESS)
+            isCorrect = INCORRECT;
         errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
         if (errorCode != SUCCESS)
-            continue;
+            isCorrect = INCORRECT;
 
-        errorCode = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
-        if (errorCode != SUCCESS)
-            printError(errorCode,0);
+        if (isCorrect == SUCCESS)
+            isCorrect = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
+        if (isCorrect != SUCCESS)
+            printError(INCORRECT,0);
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);
@@ -87,8 +92,6 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: Value is not a number in line %d\n", filename, line); break;
         case EXTRANEOUS_TEXT:
             fprintf(stdout,"%s: Extraneous text in line %d\n", filename, line); break;
-        case UNKNOWN_REGISTER:
-            fprintf(stdout,"%s: Unknown register in line %d\n", filename, line); break;
         case ILLEGAL_STRING_DATA:
             fprintf(stdout,"%s: Illegal string declaration in line %d\n", filename, line); break;
         case MISSING_COMMA:
@@ -129,6 +132,8 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: WARNING: The value in line %d is more than 12bits. The value must be between %d and %d", filename, line, (MEMORY_SIZE / 2) - 1, ((MEMORY_SIZE / 2) - 1)*(-1)); break;
         case NOT_AN_INTEGER:
             fprintf(stdout,"%s: WARNING: Value is not an integer in line %d\n", filename, line); break;
+        case INCORRECT:
+            fprintf(stdout,"%s: assembly failed\n", filename); break;
         default:
             fprintf(stdout,"%s: Unknown error in line %d\n", filename,line);
     }
