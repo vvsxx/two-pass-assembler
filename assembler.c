@@ -15,9 +15,7 @@
  * Date: [24.04.2024]
  */
 
-
-
-static char *filename;
+static char *filename; /* contains current filename */
 /*
  * The main function of the two-pass assembler program.
  * It processes command line arguments, initializes data structures,
@@ -64,8 +62,6 @@ int main(int argc, char *argv[]) {
         errorCode = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
         if (errorCode != SUCCESS)
             printError(errorCode,0);
-
-        test(img);
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);

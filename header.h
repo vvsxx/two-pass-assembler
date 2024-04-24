@@ -76,4 +76,3 @@ int getOpValue (char *op, list *symbols, int *isCorrect);
 int isLegalName(char *name, op_table *opcodes);
 int isSavedWord(char *name, op_table *opcodes);
 int syntaxCheck(char *line, op_table *opcodes);
-void test(mem_img *img);

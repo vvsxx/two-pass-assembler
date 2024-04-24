@@ -5,7 +5,7 @@ list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char 
 int stringDefinition(char *token);
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum);
-static int isCorrect;
+static int isCorrect; /* accessible only from this file, uses to detect logical problems in multiple functions */
 /*
  * Performs the first pass of the assembly process, constructing the symbol table (labels and constants),
  * computing addresses for each label, checking for memory limits, and detecting syntax errors.

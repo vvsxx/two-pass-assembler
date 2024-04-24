@@ -3,7 +3,7 @@
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
 macros_list *buildTable(FILE *input, op_table *opcodes);
-static int isCorrect;
+static int isCorrect; /* accessible only from this file, uses to detect logical problems in multiple functions */
 /*
  * Pre-processes the source file by deploying macros and creating a ".am" file.
  *
