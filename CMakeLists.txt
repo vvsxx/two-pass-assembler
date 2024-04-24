@@ -13,4 +13,5 @@ add_executable(assembler assembler.c
         secondPass.c
         typedef.h
         sentence.c
+        test.c
 )

@@ -1,16 +1,30 @@
 #include "header.h"
 
-void test(mem_img *img);
-char *filename;
+/*
+ * Two-pass assembler program for translating assembly code into machine code.
+ *
+ * This program consists of multiple functions to perform the first and second passes of the assembly process.
+ * The preprocessor function prepares the input assembly file by handling macros and generating an intermediate ".am" file.
+ * The first pass involves processing each line of the input assembly file to build symbol tables, check syntax, and calculate memory requirements.
+ * The second pass generates the binary code and data section by processing each line of the assembly file, coding instructions and data directives, and handling operand addressing modes.
+ * if no errors occurred, the program encrypts the obtained binary code into encrypted base 4.
+ * If all stages are completed successfully, the program writes the following files: .ent, .ext, and .ob.
+ * If errors are detected during any stage, the program outputs an appropriate error message indicating the location of the error.
+ *
+ * Author: [Vladimir Vais]
+ * Date: [24.04.2024]
+ */
+
+
+
+static char *filename;
 /*
  * The main function of the two-pass assembler program.
  * It processes command line arguments, initializes data structures,
  * performs two passes over the source files, and generates output files.
- *
  * Parameters:
  *   argc: The number of command line arguments.
  *   argv: An array of strings containing the command line arguments.
- *
  * Returns:
  *   0 on successful execution, 1 if too few arguments are provided.
  */
@@ -19,7 +33,6 @@ int main(int argc, char *argv[]) {
     op_table *opcodes; /* contains binary values and allowed addressing modes */
     list *symbols; /* contains labels and constants */
     mem_img *img; /* contains binary code */
-
     /* check that at least one argument had been received */
     if (argc < 2) {
         printf("too few arguments, please enter al least 1 filename\n");
@@ -43,7 +56,7 @@ int main(int argc, char *argv[]) {
         if (errorCode != SUCCESS)
             continue;
 
-        errorCode = firstPass(argv[i], symbols, opcodes, MEMORY_SIZE);  /* fill data tables and code mem_img */
+        errorCode = firstPass(argv[i], symbols, opcodes, (MEMORY_SIZE - FIRST_ADDRESS));  /* fill data tables and code mem_img */
         errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
         if (errorCode != SUCCESS)
             continue;
@@ -116,6 +129,10 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: Undefined symbol in line %d\n", filename,line); break;
         case TOO_LONG_LINE:
             fprintf(stdout,"%s: WARNING: Line %d is longer than %d characters. Extra characters will be ignored.\n", filename,line, LINE_LENGTH); break;
+        case TOO_BIG_VALUE:
+            fprintf(stdout,"%s: WARNING: The value in line %d is more than 12bits. The value must be between %d and %d", filename, line, (MEMORY_SIZE / 2) - 1, ((MEMORY_SIZE / 2) - 1)*(-1)); break;
+        case NOT_AN_INTEGER:
+            fprintf(stdout,"%s: WARNING: Value is not an integer in line %d\n", filename, line); break;
         default:
             fprintf(stdout,"%s: Unknown error in line %d\n", filename,line);
     }
@@ -149,77 +166,4 @@ void getOpTable(op_table *table, int max_registers) {
     memcpy(table->operands_needed, operands_needed, sizeof(operands_needed));
     memcpy(table->allowed_src, alwd_src, sizeof(alwd_src));
     memcpy(table->allowed_dst, alwd_dst, sizeof(alwd_dst));
-}
-
-void test(mem_img *img){
-    int i, counter, int_val, j, error;
-    char line[LINE_LENGTH], *addr, *val, tmp[2];
-    char encrypted[10];
-    FILE *testfile, *encfile;
-    word *wrd_tmp = img->code_h;
-    testfile = openFile("testfile", "r");
-    encfile = openFile("encrypted_test", "r");
-    memset(encrypted, '\0', sizeof (encrypted));
-    /*  TESTS */
-    while (wrd_tmp != NULL){
-        error = 0;
-        counter = wrd_tmp->address;
-        fgets(encrypted, sizeof(encrypted), encfile);
-        encrypted[strcspn(encrypted, "\r")] = '\0';
-        if (fgets(line, sizeof(line), testfile) != NULL){
-            addr = strtok(line, " \t");
-            val = strtok(NULL, " \t");
-        } else {
-            printf("НЕХВАТАЕТ СТРОК\n");
-        }
-        if (counter != atoi(addr))
-            error = 1;
-        if (strcmp(encrypted, wrd_tmp->secure4) != 0)
-            error = 1;
-        printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
-        j = 0;
-        error = 0;
-        for (i = WORD_L - 1; i >= 0; --i, j++) {
-            tmp[0] = val[j];
-            tmp[1] = '\0';
-            int_val = atoi( tmp);
-            printf("%d ", wrd_tmp->binary[i]);
-            if (int_val != wrd_tmp->binary[i])
-                error = 1;
-        }
-        if (error == 0)
-            printf(" OK\n");
-        else
-            printf(" error\n");
-        wrd_tmp = wrd_tmp->next;
-    }
-    wrd_tmp = img->data_h;
-    while (wrd_tmp != NULL){
-        counter = wrd_tmp->address;
-        if (fgets(line, sizeof(line), testfile) != NULL){
-            addr = strtok(line, " \t");
-            val = strtok(NULL, " \t");
-        } else {
-            printf("НЕХВАТАЕТ СТРОК\n");
-        }
-        if (counter != atoi(addr))
-            error = 1;
-        printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
-        error = 0;
-        j = 0;
-        for (i = WORD_L - 1; i >= 0; --i, j++) {
-            tmp[0] = val[j];
-            tmp[1] = '\0';
-            int_val = atoi( tmp);
-            printf("%d ", wrd_tmp->binary[i]);
-            if (int_val != wrd_tmp->binary[i])
-                error = 1;
-        }
-        if (error == 0)
-            printf(" OK\n");
-        else
-            printf(" error\n");
-        wrd_tmp = wrd_tmp->next;
-    }
-    fclose(testfile);
 }

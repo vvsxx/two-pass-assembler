@@ -3,7 +3,7 @@
 /* functions accessible only from this file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
 macros_list *buildTable(FILE *input, op_table *opcodes);
-
+static int isCorrect;
 /*
  * Pre-processes the source file by deploying macros and creating a ".am" file.
  *
@@ -22,6 +22,7 @@ int preProcessor(char *filename, op_table *opcodes) {
     int nameSize = strlen(filename) + 4; /* ".as/.am" + '\0' */
     char *inputFileName = safeMalloc(nameSize * sizeof (int));
     char *outputFileName = safeMalloc(nameSize * sizeof (int));
+    isCorrect = SUCCESS;
     strcpy(inputFileName, filename);
     strcat(inputFileName, ".as\0"); /* create input file name */
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
@@ -42,16 +43,15 @@ int preProcessor(char *filename, op_table *opcodes) {
     fclose(inputFile);
     free(inputFileName);
     free(outputFileName);
-    return SUCCESS;
+    return isCorrect;
 }
 
-/* function creates macro table */
+/* creates table that contains all data defined between each macro declaration */
 macros_list *buildTable(FILE *input, op_table *opcodes) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];
     char buffer[LINE_LENGTH];
     char *token;
-    int isCorrect = SUCCESS;
     int i, c, lineNum = 0, isMacro = 0;
     while (fgets(line, LINE_LENGTH-1, input) != NULL) {
         /* if line is longer than LINE_LENGTH characters */
@@ -70,7 +70,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
             i = 0;
             token = strtok(NULL, " \t"); /* macro name */
             if (token == NULL) {
-                isCorrect = INCORRECT;
+                isCorrect = ILLEGAL_MACRO_NAME;
                 printError(ILLEGAL_MACRO_NAME, lineNum);
                 continue;
             }
@@ -82,7 +82,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
                 macros_h = macros;
             }
             if ((isCorrect = isSavedWord(token, opcodes)) != SUCCESS) {
-                isCorrect = INCORRECT;
+                isCorrect = ILLEGAL_MACRO_NAME;
                 printError(ILLEGAL_MACRO_NAME, lineNum);
             }
             macros->name = strDuplicate(token);
@@ -102,7 +102,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
     return macros_h;
 }
 
-
+/* Writes the processed assembly code to the .am file */
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char line[LINE_LENGTH], buffer[LINE_LENGTH], *token; /* line processing */
     char *data;

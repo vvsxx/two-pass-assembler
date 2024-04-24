@@ -56,10 +56,10 @@ typedef enum {
     MISSING_OPERAND = (-19),
     ILLEGAL_MACRO_NAME = (-20),
     EMPTY_LABEL = (-21),
-    TOO_BIG_NUM = (-22),
+    TOO_BIG_VALUE = (-22),
     ILLEGAL_DEF_DECLAR = (-23),
     ILLEGAL_DATA_DIRECT = (-24),
-    MISSING_OPERATOR = (-25),
+    NOT_AN_INTEGER = (-25),
     ERROR_OPENING_FILE = (-26),
     UNDEFINED_SYMBOL = (-27)
 } ErrorCode;

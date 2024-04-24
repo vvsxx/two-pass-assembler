@@ -9,7 +9,6 @@
 /* system parameters */
 #define FIRST_ADDRESS 100 /* addressing starts from this address */
 #define MEMORY_SIZE 4096
-#define MAX_VALUE 4096
 
 /* lengths */
 #define LINE_LENGTH 81
@@ -57,7 +56,7 @@ struct list *getElementByName(struct list *listHead, char *string);
 struct macros_list *getMacroByName(struct macros_list *listHead, char *string);
 void decimalToBinary(int decimal, int *binary, int array_size);
 void binaryToEncrypted4(const int *binary, char *result);
-list  * createSymbol(struct list  *list, char *token, char *line, SentenceType type);
+list  * createSymbol(struct list  *list, char *token, char *line, SentenceType type, int lineNum);
 void printError(ErrorCode errorCode, int line);
 int createEntFile(list *labels, char *fileName);
 int getOpcode(op_table *opcodes, char *token);
@@ -65,7 +64,7 @@ int getAddressingMode (char *operand);
 void resetBits(int *arr, int size);
 char *strDuplicate(const char *src);
 void freeList(void *node, ListType type);
-SentenceType getSentence(op_table *opcodes, char *token, int lineNum);
+SentenceType getSentence(op_table *opcodes, char *token);
 char *deleteWhiteSpaces(char *token);
 int isNumber(const char *token);
 OperandType getOpType(char *token);
@@ -76,4 +75,5 @@ void addAddress(int **arr, int *size, int address);
 int getOpValue (char *op, list *symbols, int *isCorrect);
 int isLegalName(char *name, op_table *opcodes);
 int isSavedWord(char *name, op_table *opcodes);
-int syntaxCheck(char *line, op_table *opcodes, int lineNum);
+int syntaxCheck(char *line, op_table *opcodes);
+void test(mem_img *img);

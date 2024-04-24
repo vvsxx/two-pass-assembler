@@ -89,7 +89,7 @@ void freeList(void *node, ListType type) {
  *   type: Type of the symbol (DEFINE, ENTRY, EXTERN, INSTRUCTION).
  *  Returns pointer to the new node.
  */
-list * createSymbol(struct list *list, char *token, char *line, SentenceType type){
+list * createSymbol(struct list *list, char *token, char *line, SentenceType type, int lineNum){
     if (type == DEFINE) {
         line = strstr(line, ".define");
         line += strlen(".define");
@@ -104,6 +104,7 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     list->type = NULL;
     list->addresses = NULL;
     list->next = NULL;
+    list->value = 0;
     token = deleteWhiteSpaces(token);
 
     list->name = strDuplicate(token);
@@ -113,6 +114,9 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     if (type == DEFINE) {
         if ((token = strtok(NULL, "=")) == NULL)
             return NULL;
+        token = deleteWhiteSpaces(token);
+        if (!isNumber(token))
+            printError(NOT_AN_INTEGER, lineNum);
         list->value = atoi(token);
         list->type = strDuplicate("mdefine");
         list->ARE = ARE_ABSOLUTE;

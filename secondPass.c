@@ -7,7 +7,7 @@ void processDataDirective(char *token, mem_img *img, list *symbols);
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
-int errorCode; /* accessible only from this file, uses to detect logical problems in multiple functions */
+static int errorCode; /* accessible only from this file, uses to detect logical problems in multiple functions */
 
 /*
  * Performs the second pass of the assembly process, generating the binary code and data section.
@@ -47,10 +47,10 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
         token = strtok(line, " \t");
         if (token == NULL)
             continue;
-        sentence = getSentence(op_table, token, lineNum);
+        sentence = getSentence(op_table, token);
         if (sentence == LABEL) { /* skip label declaration */
             token = strtok(NULL, " \t");
-            sentence = getSentence(op_table, token, lineNum);
+            sentence = getSentence(op_table, token);
         }
         if (sentence == INSTRUCTION) {
             src = NULL;
@@ -121,7 +121,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
 }
 
 
-/* codes a certain number of words depending on the operand and addressing mode */
+/* codes a words of sentence depending on the operand and addressing mode */
 void codeWords(char *op, mem_img *img, list *symbols, int pos){
     int *word = img->code->binary;
     int addr_mode, ARE, value = 0;
@@ -140,7 +140,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         value = symbol->value;
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
         decimalToBinary(ARE, word, ARE_SIZE);
-    } else if (addr_mode == IMMEDIATE) { /* # */
+    } else if (addr_mode == IMMEDIATE) { /* operand starts with # */
         value = getOpValue(op, symbols, &errorCode);
         decimalToBinary(value, &word[DATA_WORD_POS], OP_WORD_L);
     } else if (addr_mode == REGISTER_MODE) { /* register */
@@ -194,7 +194,7 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
 
 }
 
-
+/* codes operand value */
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos){
     img->code = createWordNode(img->code, img->IC);
     resetBits(img->code->binary, WORD_L);
@@ -202,6 +202,7 @@ void codeOpValue(char *op, mem_img *img, list *symbols, int pos){
     img->IC++;
 }
 
+/* codes addressing mode */
 char * codeAddressingMode(char *op, mem_img *img, int pos){
     int adr_mode;
     op = strtok(NULL, " ,");

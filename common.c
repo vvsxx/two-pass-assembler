@@ -21,7 +21,10 @@ FILE *openFile(char *fileName, char *mode) {
     return file;
 }
 
-/* memory allocation with error handling */
+/*
+ * Safely allocates memory of the given size using malloc.
+ * A memory allocation error is considered critical and in this case the program terminates completely.
+ */
 void *safeMalloc(size_t size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
@@ -112,22 +115,21 @@ char *deleteWhiteSpaces(char *token) {
 /* returns non zero value in case if token is number */
 int isNumber(const char *token) {
     /* empty value */
-    if (*token == '\0') {
+    if (*token == '\0')
         return 0;
-    }
+
     /* first character must be digit ro + or - */
-    if (!isdigit(*token) && *token != '+' && *token != '-') {
+    if (!isdigit(*token) && *token != '+' && *token != '-')
         return 0;
-    }
+
     /* move to the next character in case of + or - */
-    if (*token == '+' || *token == '-') {
+    if (*token == '+' || *token == '-')
         token++;
-    }
+
     /* check that all characters are digits */
     while (*token != '\0') {
-        if (!isdigit(*token)) {
+        if (!isdigit(*token))
             return 0;
-        }
         token++;
     }
     return 1;
@@ -220,7 +222,7 @@ int createEntFile(list *labels, char *fileName) {
     return isCorrect;
 }
 
-int syntaxCheck(char *line, op_table *opcodes, int lineNum) {
+int syntaxCheck(char *line, op_table *opcodes) {
     int opcode, i;
     int errorCode = SUCCESS;
     char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
@@ -244,12 +246,12 @@ int syntaxCheck(char *line, op_table *opcodes, int lineNum) {
     }
     strcpy(buffer, line);
     token = strtok(buffer, " \t");
-    type = getSentence(opcodes, token, lineNum);
+    type = getSentence(opcodes, token);
     if (type == LABEL) {
         label = safeMalloc((strlen(token)+1) * sizeof (char));
         strcpy(label, token);
         token = strtok(NULL, " \t");
-        type = getSentence(opcodes, token, lineNum);
+        type = getSentence(opcodes, token);
     }
     if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
         errorCode =  SUCCESS; /* skip this case */

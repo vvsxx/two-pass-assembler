@@ -1,11 +1,11 @@
 #include "header.h"
 
-/* functions accessible only from this file */
-list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *head, op_table *opcodes, int lineNum, int *isCorrect);
+/* functions and variables accessible only from this file */
+list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *head, op_table *opcodes, int lineNum);
 int stringDefinition(char *token);
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
-void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck);
-
+void processDirective(SentenceType type, int *DC, char *token, int lineNum);
+static int isCorrect;
 /*
  * Performs the first pass of the assembly process, constructing the symbol table (labels and constants),
  * computing addresses for each label, checking for memory limits, and detecting syntax errors.
@@ -24,11 +24,12 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     char labelName[LABEL_LENGTH];
     char c;
     int IC = FIRST_ADDRESS, DC = 0, mem_counter = 0, lineNum = 0; /* counters */
-    int isCorrect = 1, res; /* errors flag */
+    int res; /* errors flag */
     int *pIC = &IC, *pDC = &DC; /* pointers */
     int opcode; /* opcode decimal value */
     SentenceType type;
     FILE *input;
+    isCorrect = SUCCESS;
     strcpy(newFileName, fileName);
     strcat(newFileName, ".am");
     input = openFile(newFileName, "r");
@@ -43,7 +44,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
         res = SUCCESS;
         lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
-        res = syntaxCheck(token, opcodes, lineNum);
+        res = syntaxCheck(token, opcodes);
         if (res != SUCCESS) {
             isCorrect = INCORRECT;
             printError(res, lineNum);
@@ -61,24 +62,20 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
             isCorrect = ILLEGAL_COMMA;
             token[strlen(token)-1] = '\0';
         }
-        type = getSentence(opcodes, token, lineNum);
+        type = getSentence(opcodes, token);
         if (type == LABEL){ /* label declaration case */
             strcpy(labelName, token);
             if ((token = strtok(NULL, " \t")) == NULL) { /* label before empty line */
                 printError(EMPTY_LABEL, lineNum);
                 continue;
             }
-            type = getSentence(opcodes, token, lineNum);
+            type = getSentence(opcodes, token);
             if (type != ENTRY && type != EXTERN && token != NULL) {
-                symbols = processLabel(type, pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum,
-                                       &res);
-                if (res < 0) {
-                    printError(res, lineNum);
-                    isCorrect = INCORRECT;
-                }
+                symbols = processLabel(type, pDC, pIC, labelName, token, symbols, symbols_head, opcodes, lineNum);
+
             }
         } else if (type == DEFINE) { /* constant definition case */
-            if ((tmp = createSymbol(symbols, token, buffer, type)) != NULL)
+            if ((tmp = createSymbol(symbols, token, buffer, type, lineNum)) != NULL)
                 symbols = tmp;
             else
                 printError(ILLEGAL_DEF_DECLAR, lineNum);
@@ -88,21 +85,21 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
             IC++;
         } else if (type == EXTERN) { /* extern symbol definition case */
             token = strtok(NULL, " \t");
-            symbols = createSymbol(symbols, token, buffer, type);
+            symbols = createSymbol(symbols, token, buffer, type, lineNum);
         } else if (type == ENTRY) { /* entry symbol definition case */
             token = strtok(NULL, " \t");
             if ((tmp = getElementByName(symbols_head, token)) != NULL)
                 tmp->isEntry = 1;
             else
-                symbols = createSymbol(symbols, token, token, type);
+                symbols = createSymbol(symbols, token, token, type, lineNum);
         } else if (type == COMMENT){ /* comment case */
             continue;
         }
         else if (type == DATA || type == STRING){
-            processDirective(type, &DC, token, lineNum, &isCorrect);
+            processDirective(type, &DC, token, lineNum);
         } else { /* Illegal case */
             printError(UNKNOWN_OPERATOR,lineNum);
-            isCorrect = INCORRECT;;
+            isCorrect = INCORRECT;
         }
     }
     /* add up counters */
@@ -116,7 +113,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     }
     if ((mem_counter = (IC - FIRST_ADDRESS) + DC) > memSize) {
         printError(OUT_OF_MEMORY, mem_counter);
-        isCorrect = INCORRECT;;
+        isCorrect = INCORRECT;
     }
     free(buffer);
     fclose(input);
@@ -167,22 +164,22 @@ int stringDefinition(char *token){
  *   isCorrect: Pointer to the error flag.
  * Returns: Pointer to the last symbol in the updated symbol table.
  */
-list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, op_table *opcodes, int lineNum, int *isCorrect){
+list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *labels_head, op_table *opcodes, int lineNum){
     int opcode;
     list *current = labels_last, *tmp;
     labelName[strlen(labelName)-1] = '\0';
-    if (((*isCorrect) = isLegalName(labelName, opcodes)) != SUCCESS)
+    if ((isCorrect = isLegalName(labelName, opcodes)) != SUCCESS)
         printError(ILLEGAL_LABEL_NAME, lineNum);
 
     if ((tmp = getElementByName(labels_head, labelName)) != NULL) {
         if (strcmp(tmp->type, "entry") != 0) {
             printError(MULTIPLE_LABEL, lineNum);
-            (*isCorrect) = INCORRECT;
+            isCorrect = INCORRECT;
         } else {
             current = tmp;
         }
     } else {
-        labels_last = createSymbol(labels_last, labelName, labelName, type);
+        labels_last = createSymbol(labels_last, labelName, labelName, type, lineNum);
         current = labels_last;
     }
     if (type == DATA || type == STRING){
@@ -192,7 +189,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
             strcpy(current->type, "data");
         current->ARE = ARE_RELOCATABLE;
         current->value = *DC;
-        processDirective(type, DC, token, lineNum, isCorrect);
+        processDirective(type, DC, token, lineNum);
     } else if (type == INSTRUCTION) {
         opcode = getOpcode(opcodes, token);
         current->type = strDuplicate("code");
@@ -200,7 +197,7 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
         (*IC) += processInstruction(token, opcodes, opcode, lineNum) + 1;
     } else {
         printError(UNKNOWN_OPERATOR, lineNum);
-        *isCorrect = INCORRECT;;
+        isCorrect = INCORRECT;
     }
     return labels_last;
 }
@@ -258,7 +255,7 @@ int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum){
  *   lineNum: Line number of the directive statement.
  *   errorCheck: Pointer to the error flag.
  */
-void processDirective(SentenceType type, int *DC, char *token, int lineNum, int *errorCheck){
+void processDirective(SentenceType type, int *DC, char *token, int lineNum){
     int res;
     if (type == STRING) {
         token = &token[strlen(token)+1];
@@ -268,13 +265,13 @@ void processDirective(SentenceType type, int *DC, char *token, int lineNum, int 
             (*DC) += res;
         } else {
             printError(res, lineNum);
-            (*errorCheck) = INCORRECT;
+            isCorrect = INCORRECT;
         }
     } else {
         while ((token = strtok(NULL, ",")) != NULL) {
             token = deleteWhiteSpaces(token);
             if (strchr(token, ' ') != NULL){
-                (*errorCheck) = INCORRECT;
+                isCorrect = INCORRECT;
                 printError(ILLEGAL_DATA_DIRECT, lineNum);
             }
             (*DC)++;
