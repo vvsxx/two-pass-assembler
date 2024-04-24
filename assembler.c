@@ -44,29 +44,32 @@ int main(int argc, char *argv[]) {
         errorCode = SUCCESS;
         isCorrect = SUCCESS;
         filename = argv[i];
-        img = safeMalloc(sizeof (struct memory_image));
         symbols = safeMalloc(sizeof (struct list)); /* create labels list */
-        img->IC = 100;
-        img->DC = 0;
-        img->data_h = NULL;
-        img->code_h = NULL;
-        img->code = NULL;
-        img->data = NULL;
+        symbols->name = NULL; symbols->type = NULL; symbols->next = NULL;
+        img = safeMalloc(sizeof (struct memory_image));
+        img->IC = 100; img->DC = 0;
+        img->data_h = NULL; img->code_h = NULL;
+        img->code = NULL; img->data = NULL;
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
         if (errorCode != SUCCESS) {
+            printError(errorCode,0);
             isCorrect = INCORRECT;
         }
-        errorCode = firstPass(argv[i], symbols, opcodes, (MEMORY_SIZE - FIRST_ADDRESS));  /* fill data tables and code mem_img */
-        if (errorCode != SUCCESS)
-            isCorrect = INCORRECT;
-        errorCode = secondPass(argv[i], img, opcodes, symbols);  /* convert to binary than to base4 secure and write files */
-        if (errorCode != SUCCESS)
-            isCorrect = INCORRECT;
+        if (errorCode != EMPTY_FILE) {
+            errorCode = firstPass(argv[i], symbols, opcodes,
+                                  (MEMORY_SIZE - FIRST_ADDRESS));  /* fill data tables and code mem_img */
+            if (errorCode != SUCCESS)
+                isCorrect = INCORRECT;
+            errorCode = secondPass(argv[i], img, opcodes,
+                                   symbols);  /* convert to binary than to base4 secure and write files */
+            if (errorCode != SUCCESS)
+                isCorrect = INCORRECT;
 
-        if (isCorrect == SUCCESS)
-            isCorrect = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
-        if (isCorrect != SUCCESS)
-            printError(INCORRECT,0);
+            if (isCorrect == SUCCESS)
+                isCorrect = writeFiles(symbols, img, argv[i]); /* create .ent .ext and .obj files*/
+            if (isCorrect != SUCCESS)
+                printError(INCORRECT, 0);
+        }
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);
@@ -93,7 +96,7 @@ void printError(ErrorCode errorCode, int line){
         case EXTRANEOUS_TEXT:
             fprintf(stdout,"%s: Extraneous text in line %d\n", filename, line); break;
         case ILLEGAL_STRING_DATA:
-            fprintf(stdout,"%s: Illegal string declaration in line %d\n", filename, line); break;
+            fprintf(stdout,"%s: Illegal string directive in line %d\n", filename, line); break;
         case MISSING_COMMA:
             fprintf(stdout,"%s: Missing comma in line %d\n", filename, line); break;
         case ILLEGAL_REGISTER:
@@ -120,10 +123,10 @@ void printError(ErrorCode errorCode, int line){
             fprintf(stdout,"%s: WARNING: Empty label in line %d\n", filename,line); break;
         case MULTIPLE_CONS_COMMAS:
             fprintf(stdout,"%s: Multiple consecutive commas in line %d\n", filename,line); break;
-        case ILLEGAL_DEF_DECLAR:
+        case ILLEGAL_DEF_DIRECT:
             fprintf(stdout,"%s: Illegal define declaration in line %d\n", filename,line); break;
         case ILLEGAL_DATA_DIRECT:
-            fprintf(stdout,"%s: Illegal data declaration in line %d\n", filename,line); break;
+            fprintf(stdout,"%s: Illegal data directive in line %d\n", filename,line); break;
         case UNDEFINED_SYMBOL:
             fprintf(stdout,"%s: Undefined symbol in line %d\n", filename,line); break;
         case TOO_LONG_LINE:

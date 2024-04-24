@@ -16,7 +16,7 @@ static int isCorrect; /* accessible only from this file, uses to detect logical 
  *   or an error code if an error occurs during pre-processing.
  */
 int preProcessor(char *filename, op_table *opcodes) {
-    FILE *inputFile, *outputFile;
+    FILE *inputFile = NULL, *outputFile = NULL;
     macros_list *macros_h = NULL;
     char ch;
     int nameSize = strlen(filename) + 4; /* ".as/.am" + '\0' */
@@ -28,18 +28,22 @@ int preProcessor(char *filename, op_table *opcodes) {
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
     if (ch == EOF) /* if file is empty, stop here */
-        return EMPTY_FILE;
+        isCorrect = EMPTY_FILE;
 
     strcpy(outputFileName, filename);
     strcat(outputFileName, ".am\0"); /* create output file name */
-    outputFile = openFile(outputFileName, "w"); /* open output file for write */
-    if (outputFile == NULL) /* can't open output file */
-        return INCORRECT;
-    macros_h = buildTable(inputFile, opcodes); /* build macros table */
-    rewind(inputFile);
-    writeFile(inputFile, outputFile, macros_h);
+    if (isCorrect != EMPTY_FILE) {
+        outputFile = openFile(outputFileName, "w"); /* open output file for write */
+        if (outputFile == NULL) /* can't open output file */
+            isCorrect = ERROR_OPENING_FILE;
+        macros_h = buildTable(inputFile, opcodes); /* build macros table */
+        rewind(inputFile);
+        writeFile(inputFile, outputFile, macros_h);
+    }
     freeList(macros_h, MACROS_LIST);
-    fclose(outputFile);
+    if (outputFile != NULL) {
+        fclose(outputFile);
+    }
     fclose(inputFile);
     free(inputFileName);
     free(outputFileName);
@@ -54,12 +58,12 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
     char *token;
     int i, c, lineNum = 0, isMacro = 0;
     while (fgets(line, LINE_LENGTH-1, input) != NULL) {
+        lineNum++;
         /* if line is longer than LINE_LENGTH characters */
         if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n') {
             printError(TOO_LONG_LINE, lineNum); /* print alert */
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
         }
-        lineNum++;
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
         token = strtok(line, " \t");

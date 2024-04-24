@@ -251,7 +251,10 @@ int syntaxCheck(char *line, op_table *opcodes) {
         label = safeMalloc((strlen(token)+1) * sizeof (char));
         strcpy(label, token);
         token = strtok(NULL, " \t");
-        type = getSentence(opcodes, token);
+        if (token != NULL){
+            type = getSentence(opcodes, token);
+        } else
+            errorCode = EMPTY_LABEL;
     }
     if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
         errorCode =  SUCCESS; /* skip this case */
@@ -301,7 +304,7 @@ int syntaxCheck(char *line, op_table *opcodes) {
                     errorCode = EXTRANEOUS_TEXT;
             }
         }
-    } else {
+    } else if (errorCode == SUCCESS){
         errorCode = UNKNOWN_OPERATOR;
     }
     if (label != NULL)

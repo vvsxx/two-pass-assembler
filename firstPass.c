@@ -38,11 +38,11 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     buffer = safeMalloc(LINE_LENGTH);
     /* read each line from .am file */
     while (fgets(line, LINE_LENGTH-1, input) != NULL){
+        lineNum++;
         if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
 
         res = SUCCESS;
-        lineNum++;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
         res = syntaxCheck(token, opcodes);
         if (res != SUCCESS) {
@@ -64,7 +64,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
         }
         type = getSentence(opcodes, token);
         if (type == LABEL){ /* label declaration case */
-            strcpy(labelName, token);
+            strncpy(labelName, token, LABEL_LENGTH);
             if ((token = strtok(NULL, " \t")) == NULL) { /* label before empty line */
                 printError(EMPTY_LABEL, lineNum);
                 continue;
@@ -78,7 +78,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
             if ((tmp = createSymbol(symbols, token, buffer, type, lineNum)) != NULL)
                 symbols = tmp;
             else
-                printError(ILLEGAL_DEF_DECLAR, lineNum);
+                printError(ILLEGAL_DEF_DIRECT, lineNum);
         } else if (type == INSTRUCTION){
             opcode = getOpcode(opcodes, token);
             IC += processInstruction(token, opcodes, opcode, lineNum);

@@ -112,12 +112,12 @@ list * createSymbol(struct list *list, char *token, char *line, SentenceType typ
     list->isExternal = 0;
 
     if (type == DEFINE) {
-        if ((token = strtok(NULL, "=")) == NULL)
-            return NULL;
-        token = deleteWhiteSpaces(token);
-        if (!isNumber(token))
-            printError(NOT_AN_INTEGER, lineNum);
-        list->value = atoi(token);
+        if ((token = strtok(NULL, "=")) != NULL) {
+            token = deleteWhiteSpaces(token);
+            if (!isNumber(token))
+                printError(NOT_AN_INTEGER, lineNum);
+            list->value = atoi(token);
+        }
         list->type = strDuplicate("mdefine");
         list->ARE = ARE_ABSOLUTE;
     } else if (type == ENTRY){

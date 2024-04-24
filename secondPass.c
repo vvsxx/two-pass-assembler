@@ -3,7 +3,7 @@
 /* functions and variables accessible only from this file */
 word * createWordNode(struct word *node, int addr);
 void codeWords(char *op, mem_img *img, list *symbols, int pos);
-void processDataDirective(char *token, mem_img *img, list *symbols);
+int processDataDirective(char *token, mem_img *img, list *symbols);
 void codeOpValue(char *op, mem_img *img, list *symbols, int pos);
 char * codeAddressingMode(char *op, mem_img *img, int pos);
 word * createInstructionWord(mem_img *img);
@@ -50,7 +50,11 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
         sentence = getSentence(op_table, token);
         if (sentence == LABEL) { /* skip label declaration */
             token = strtok(NULL, " \t");
-            sentence = getSentence(op_table, token);
+            if (token != NULL) {
+                sentence = getSentence(op_table, token);
+            } else {
+                continue; /* EMPTY LABEL */
+            }
         }
         if (sentence == INSTRUCTION) {
             src = NULL;
@@ -96,7 +100,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
                 codeOpValue(dst, img, symbols, DST_POS);
             }
         } else if (sentence == DATA || sentence == STRING) { /* data declaration found */
-            processDataDirective(token, img, symbols);
+            isCorrect = processDataDirective(token, img, symbols);
         }
         if (isCorrect != SUCCESS && isCorrect != INCORRECT) {
             printError(isCorrect, lineNum);
@@ -161,6 +165,9 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         symbol = getElementByName(symbols, label);
         if (symbol == NULL || strcmp(symbol->type, "entry") == 0) {
             isCorrect = UNDEFINED_SYMBOL;
+            free(label);
+            index--;
+            free(index);
             return;
         }
         value = getOpValue(label, symbols, &isCorrect); /* get array address */
@@ -180,6 +187,9 @@ void codeWords(char *op, mem_img *img, list *symbols, int pos){
         symbol = getElementByName(symbols, index);
         if ((symbol == NULL && !isNumber(index)) || (symbol != NULL && strcmp(symbol->type, "entry") == 0)) {
             isCorrect = UNDEFINED_SYMBOL;
+            free(label);
+            index--;
+            free(index);
             return;
         }
         if (symbol != NULL && symbol->isExternal)
@@ -214,8 +224,9 @@ char * codeAddressingMode(char *op, mem_img *img, int pos){
 }
 
 /* processing data directive line */
-void processDataDirective(char *token, mem_img *img, list *symbols) {
+int processDataDirective(char *token, mem_img *img, list *symbols) {
     list *symbol;
+    int value;
     if (strcmp(token, ".string") == 0) {
         token = &token[strlen(token)+1];
         token = strchr(token, '\"');
@@ -233,15 +244,22 @@ void processDataDirective(char *token, mem_img *img, list *symbols) {
         resetBits(img->data->binary, WORD_L);
     } else if (strcmp(token, ".data") == 0) {
         while ((token = strtok(NULL, ",")) != NULL) {
+            token = deleteWhiteSpaces(token);
+            if (token[0] == '\0')
+                return ILLEGAL_DATA_DIRECT;
             img->DC = img->data != NULL ? img->data->address + 1 : 1;
             img->data = createWordNode(img->data, img->DC);
-            decimalToBinary(getOpValue(token, symbols, &isCorrect), img->data->binary, WORD_L);
+            value = getOpValue(token, symbols, &isCorrect);
+            if (value == isCorrect && value < 0)
+                return isCorrect;
+            decimalToBinary(value, img->data->binary, WORD_L);
             if ((symbol = getElementByName(symbols, token)) != NULL && symbol->isExternal)
                 addAddress(&symbol->addresses, &symbol->addresses_size, img->DC + img->IC);
             if (img->data_h == NULL)
                 img->data_h= img->data;
         }
     }
+    return SUCCESS;
 }
 
 /* creates new instruction word */
