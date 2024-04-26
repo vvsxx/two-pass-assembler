@@ -1,10 +1,3 @@
-;Unknown operand in line 7
-;The label name repeats an existing one in line 9
-;Register does not exist in line 10
-;Unknown operator in line 14
-;Illegal string directive in line 15
-;Undefined symbol in line 11
-;Illegal data directive in line 17
 
 .extern XYZ
     .entry MAIN

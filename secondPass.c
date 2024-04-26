@@ -23,25 +23,26 @@ static int isCorrect; /* accessible only from this file, uses to detect logical 
  */
 int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     struct word *tmp; /* temporary pointer to process words */
-    char line[LINE_LENGTH], *token, c; /* line processing */
+    char line[LINE_LENGTH], *token, c, *p; /* line processing */
     int fileNameSize = strlen(fileName) + 4;
     char *amFile = safeMalloc(fileNameSize * sizeof (int)); /* ".am" + '\0' */
     char *src, *dst; /* operands */
     int src_val, dst_val; /* operand values */
     int opcode; /* opcode decimal value */
     int lineNum = 0; /* counters */
-    isCorrect = SUCCESS;
     SentenceType sentence;
     FILE *input;
     strcpy(amFile, fileName);
     strcat(amFile, ".am");
     input = openFile(amFile, "r");
+    isCorrect = SUCCESS;
     if (input == NULL) /* can't open input file */
         return INCORRECT;
     while (fgets(line, LINE_LENGTH-1, input) != NULL) {
         if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
-
+        if ((p = strchr(line, ';')) != NULL) /* if comment found */
+            p[0] ='\0'; /* ignore comments */
         lineNum++;
         line[strcspn(line, "\n")] = '\0';
         token = strtok(line, " \t");

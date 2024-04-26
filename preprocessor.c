@@ -26,6 +26,11 @@ int preProcessor(char *filename, op_table *opcodes) {
     strcpy(inputFileName, filename);
     strcat(inputFileName, ".as\0"); /* create input file name */
     inputFile = openFile(inputFileName, "r"); /* open input file for read */
+    if (inputFile == NULL){ /* file not found */
+        free(inputFileName);
+        free(outputFileName);
+        return FILE_NOT_FOUND;
+    }
     while ((ch = fgetc(inputFile)) != EOF && (ch == ' ' || ch == '\t')); /* skip white spaces */
     if (ch == EOF) /* if file is empty, stop here */
         isCorrect = EMPTY_FILE;
@@ -85,6 +90,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
                 macros = safeMalloc(sizeof(macros_list));
                 macros_h = macros;
             }
+            macros->next = NULL;
             if ((isCorrect = isSavedWord(token, opcodes)) != SUCCESS) {
                 isCorrect = ILLEGAL_MACRO_NAME;
                 printError(ILLEGAL_MACRO_NAME, lineNum);
@@ -95,7 +101,7 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
             i--;
         } else if (isMacro && strcmp(token, "endmcr") != 0) { /* inside macro declaration */
             macros->data[i] = safeMalloc((LINE_LENGTH + 1) * sizeof(char));
-            strcat(macros->data[i], buffer);
+            strcpy(macros->data[i], buffer);
         } else if (strcmp(token, "endmcr") == 0) { /* end of macro declaration found */
             isMacro = 0;
             i = 0;

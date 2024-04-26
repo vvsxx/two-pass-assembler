@@ -1,9 +1,7 @@
 #include "header.h"
 
 /*
- * Two-pass assembler program for translating assembly code into machine code.
- *
- * This program consists of multiple functions to perform the first and second passes of the assembly process.
+ * The program is a two-pass assembler for translating assembly code into machine code according to the rules defined in the technical specifications
  * The preprocessor function prepares the input assembly file by handling macros and generating an intermediate ".am" file.
  * The first pass involves processing each line of the input assembly file to build symbol tables, check syntax, and calculate memory requirements.
  * The second pass generates the binary code and data section by processing each line of the assembly file, coding instructions and data directives, and handling operand addressing modes.
@@ -51,11 +49,11 @@ int main(int argc, char *argv[]) {
         img->data_h = NULL; img->code_h = NULL;
         img->code = NULL; img->data = NULL;
         errorCode = preProcessor(argv[i], opcodes); /* deploy macros and create ".am" file */
-        if (errorCode != SUCCESS) {
+        if (errorCode != SUCCESS && errorCode != FILE_NOT_FOUND) {
             printError(errorCode,0);
             isCorrect = INCORRECT;
         }
-        if (errorCode != EMPTY_FILE) {
+        if (errorCode != EMPTY_FILE && errorCode != FILE_NOT_FOUND) {
             errorCode = firstPass(argv[i], symbols, opcodes,
                                   (MEMORY_SIZE - FIRST_ADDRESS));  /* fill data tables and code mem_img */
             if (errorCode != SUCCESS)

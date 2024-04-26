@@ -44,6 +44,7 @@ typedef enum {
     ILLEGAL_STRING_DATA = (-7),
     NOT_A_NUMBER = (-8),
     ILLEGAL_COMMA = (-9),
+    FILE_NOT_FOUND = (-10),
     MULTIPLE_CONS_COMMAS = (-11),
     MISSING_COMMA = (-12),
     ILLEGAL_REGISTER = (-13),

@@ -2,13 +2,17 @@
  .extern EX
     .define sz = 2
 ; this is comment
-MAIN:    mov r7 LIST[sz]
+MAIN:    mov r7, LIST[sz]
 LOOP:    jmp L1
+mcr m_mcr
+cmp r3, #sz
+bne END
+endmcr
 prn #-5
 mov STR[5], STR[EX]
 sub r1, r4
-cmp r3, #sz
-bne END
+
+m_mcr
 L1:    inc K
 bne LOOP
 END:    hlt

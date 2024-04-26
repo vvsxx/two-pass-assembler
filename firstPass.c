@@ -19,7 +19,7 @@ static int isCorrect; /* accessible only from this file, uses to detect logical 
  */
 int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
     list *tmp, *symbols_head = symbols; /* list processing */
-    char line[LINE_LENGTH], *buffer, *token; /* line processing */
+    char line[LINE_LENGTH], *buffer, *token, *p; /* line processing */
     char *newFileName = safeMalloc((strlen(fileName) + 4) * sizeof (int)); /* ".am" + '\0' */
     char labelName[LABEL_LENGTH];
     char c;
@@ -41,7 +41,8 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
         lineNum++;
         if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
-
+        if ((p = strchr(line, ';')) != NULL) /* if comment found */
+            p[0] ='\0'; /* ignore comments */
         res = SUCCESS;
         token = deleteWhiteSpaces(line); /* used to check line correctness */
         res = syntaxCheck(token, opcodes);
@@ -193,7 +194,10 @@ list *processLabel (SentenceType type, int *DC, int *IC, char *labelName, char *
         processDirective(type, DC, token, lineNum);
     } else if (type == INSTRUCTION) {
         opcode = getOpcode(opcodes, token);
-        current->type = strDuplicate("code");
+        if (current->type == NULL)
+            current->type = strDuplicate("code");
+        else
+            strcpy(current->type, "code");
         current->value = *IC;
         (*IC) += processInstruction(token, opcodes, opcode, lineNum) + 1;
     } else {

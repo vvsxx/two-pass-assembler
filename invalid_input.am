@@ -1,10 +1,3 @@
-;Unknown operand in line 7
-;The label name repeats an existing one in line 9
-;Register does not exist in line 10
-;Unknown operator in line 14
-;Illegal string directive in line 15
-;Undefined symbol in line 11
-;Illegal data directive in line 17
 .extern XYZ
     .entry MAIN
 KINITIALVALUE: sub  r4   ,     r3
@@ -14,17 +7,16 @@ LOOP:   jmp L1
 prn -5
 bne LOOP
 XYZ: mov  r4,  r2
-â
-Y\Scsub  r1,  r9
-˘êV5    bne END
+sub  r1,  r9
+    bne END
 L1:     inc K
 bne LOOP
 stopp
 STR:    .string "666"abcdef"
 LENGTH: .data 6, -9, 15
 K:      .data 4    ,  ,  -55,4,4,4,6
-0≠·±∑mov reg1, val
-@≠·±∑add reg2, reg1
+mov reg1, val
+add reg2, reg1
 ABC: mov XYZ,  r3
 reg1: .data 6,5,-555,66
 reg2: .data 6,5,-555,66

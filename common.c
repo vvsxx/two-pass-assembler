@@ -231,11 +231,6 @@ int syntaxCheck(char *line, op_table *opcodes) {
     SentenceType type;
     line = deleteWhiteSpaces(line);
     p = line;
-    while (p[0] != '\0') {
-        if (p[0] == ';') /* skip comment line */
-            p[0] = '\0';
-        p++;
-    }
     if (line[0] == '\0') { /* skip empty line */
         free(buffer);
         return SUCCESS;
@@ -266,8 +261,12 @@ int syntaxCheck(char *line, op_table *opcodes) {
         operands = safeMalloc(((strlen(p)+1) * sizeof(char)));
         strcpy(operands,  p);
         opcode = getOpcode(opcodes, operator);
-        if (opcode < 0) /* error case */
-            errorCode =  opcode;
+        if (opcode < 0) { /* error case */
+            if (operator[strlen(operator) - 1] == ',')
+                errorCode = ILLEGAL_COMMA;
+            else
+                errorCode = opcode;
+        }
         if (opcodes->operands_needed[opcode] == 0) { /* operator with no operands */
             token = strtok(NULL, " ,\t");
             if (token != NULL)
@@ -282,6 +281,8 @@ int syntaxCheck(char *line, op_table *opcodes) {
             if (token != NULL)
                 errorCode = EXTRANEOUS_TEXT;
         } else if (opcodes->operands_needed[opcode] == 2) { /* operator with two operands */
+            if (operands[0] == ',')
+                errorCode = ILLEGAL_COMMA;
             strcpy(buffer, operands);
             token = strtok(operands, ","); /* get src */
             if (token == NULL)
@@ -291,8 +292,13 @@ int syntaxCheck(char *line, op_table *opcodes) {
                     errorCode = ILLEGAL_COMMA;
             }
             token = strtok(NULL, ","); /* get dst */
-            if (token == NULL)
-                errorCode = MISSING_OPERAND;
+            if (token == NULL) {
+                if (strchr(operands, ' ') != NULL) {
+                    errorCode = MISSING_COMMA;
+                } else {
+                    errorCode = MISSING_OPERAND;
+                }
+            }
             if (token != NULL) {
                 if (token[0] == ',' || token[strlen(token) - 1] == ',')
                     errorCode = ILLEGAL_COMMA;
