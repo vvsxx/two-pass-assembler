@@ -35,60 +35,43 @@ void *safeMalloc(size_t size) {
 }
 
 
-/* converts a decimal value to binary and stores it in "array_size" bits in the "binary" array  */
-void decimalToBinary(int decimal, int *binary, int array_size) {
-    int i, tmp = decimal;
-    resetBits(binary, array_size);
-    i = 0;
-    /* positive value case */
-    while (tmp && i < array_size) {
-        binary[i] = tmp % 2;
-        i++;
-        tmp /= 2;
-    }
-    /* negative value case */
-    if (decimal < 0) {
-        /* invert all digits */
-        for (i = 0; i < array_size; i++) {
-            binary[i] = binary[i] == 0 ? 1 : 0;
-        }
-        i = 0;
-        /* add 001 */
-        while (binary[i] == 1 && i < array_size) {
-            binary[i] = 0;
-            i--;
-        }
-        binary[i] = 1;
+/* converts a decimal number to binary and writes the resulting bits into the specified bit range of the "word" variable.  */
+void decToBin(int dec, int* word, int firstBit, int bitsToCode) {
+    int lastBit = bitsToCode + firstBit - 1;
+
+    for (int i = firstBit; i <= lastBit; i++) {
+        int bitValue = (dec >> (i - firstBit)) & 1;
+        *word |= (bitValue << i);
     }
 }
 
+
+
 /* converts the binary value to a base 4 encrypted value and writes it to the "result" array */
-void binaryToEncrypted4(const int *binary, char *result) {
+void binaryToEncrypted4(int binary, char *result) {
     int i, j, res = 6;
-    int base4[4][2] = {{0, 0},
-                       {0, 1},
-                       {1, 0},
-                       {1, 1}};
+    int base4[4][2] = {
+            {0, 0},
+            {0, 1},
+            {1, 0},
+            {1, 1}
+    };
 
-    int secure[] = {'*', '#', '%', '!'};
+    char secure[] = {'*', '#', '%', '!'};
 
-    result[7] = '\0';
+    result[7] = '\0'; // Завершающий нуль-символ для строки
     for (i = 0; i < WORD_L; i += 2) {
+        int bit1 = (binary >> (i + 1)) & 1; // Получаем старший бит пары
+        int bit0 = (binary >> i) & 1;       // Получаем младший бит пары
+
         for (j = 0; j < 4; ++j) {
-            if (base4[j][0] == binary[i + 1] && base4[j][1] == binary[i]) {
-                result[res] = (char) secure[j];
+            if (base4[j][0] == bit1 && base4[j][1] == bit0) {
+                result[res] = secure[j];
                 res--;
                 break;
             }
         }
     }
-}
-
-/* sets array values to 0 */
-void resetBits(int *arr, int size) {
-    int i;
-    for (i = 0; i < size; ++i)
-        arr[i] = 0;
 }
 
 

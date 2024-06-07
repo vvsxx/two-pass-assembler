@@ -1,4 +1,6 @@
 #include "header.h"
+
+
 void test(mem_img *img){
     int i, counter, int_val, j, error;
     char line[LINE_LENGTH], *addr, *val, tmp[2];
@@ -27,12 +29,13 @@ void test(mem_img *img){
         printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
         j = 0;
         error = 0;
-        for (i = WORD_L - 1; i >= 0; --i, j++) {
+        for (i = sizeof(short) * 8 - 1; i >= 0; --i, j++) {
+            int bit = (wrd_tmp->binary >> i) & 1;
             tmp[0] = val[j];
             tmp[1] = '\0';
             int_val = atoi( tmp);
-            printf("%d ", wrd_tmp->binary[i]);
-            if (int_val != wrd_tmp->binary[i])
+            printf("%d ", bit);
+            if (int_val != bit)
                 error = 1;
         }
         if (error == 0)
@@ -55,12 +58,13 @@ void test(mem_img *img){
         printf("%d\t\t%s\t\t", counter, wrd_tmp->secure4);
         error = 0;
         j = 0;
-        for (i = WORD_L - 1; i >= 0; --i, j++) {
+        for (i = sizeof(short) * 8 - 1; i >= 0; --i, j++) {
+            int bit = (wrd_tmp->binary >> i) & 1;
             tmp[0] = val[j];
             tmp[1] = '\0';
             int_val = atoi( tmp);
-            printf("%d ", wrd_tmp->binary[i]);
-            if (int_val != wrd_tmp->binary[i])
+            printf("%d ", bit);
+            if (int_val != bit)
                 error = 1;
         }
         if (error == 0)
