@@ -30,8 +30,6 @@ void freeWordList(struct word *head) {
     while (head != NULL) {
         word *temp = head;
         head = head->next;
-        if (temp->secure4 != NULL)
-            free(temp->secure4);
         free(temp);
     }
 }
@@ -179,7 +177,6 @@ word * createWordNode(struct word *node, int addr){
     word *tmp;
     tmp = (struct word *) safeMalloc(sizeof(struct word));
     tmp->next = NULL;
-    tmp->secure4 = safeMalloc(8 * sizeof (int));
     tmp->binary = 0;
     tmp->address = addr;
     if (node != NULL)

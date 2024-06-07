@@ -31,7 +31,6 @@ struct opcode_table {
 
 struct word {
     int binary;              /* binary value */
-    char *secure4;            /* encrypted base 4 value */
     int address;              /* decimal address */
     struct word *next;        /* Pointer to the next word */
 };

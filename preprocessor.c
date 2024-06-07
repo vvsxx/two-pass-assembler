@@ -125,7 +125,6 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char *formatedLine = NULL;
     macros_list *macros = NULL;
     int i, c, macroDec = 0;
-    SentenceType sentence;
     while (fgets(line, LINE_LENGTH, inputFile) != NULL) {
         /* if line is longer than LINE_LENGTH characters */
         if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n')

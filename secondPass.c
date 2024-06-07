@@ -23,7 +23,7 @@ static int isCorrect; /* accessible only from this file, uses to detect logical 
  */
 int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     struct word *tmp; /* temporary pointer to process words */
-    char line[LINE_LENGTH], *token, c, *p; /* line processing */
+    char line[LINE_LENGTH], *token, *p; /* line processing */
     int fileNameSize = strlen(fileName) + 4;
     char *amFile = safeMalloc(fileNameSize * sizeof (int)); /* ".am" + '\0' */
     char *src, *dst; /* operands */
@@ -115,8 +115,6 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
         tmp = tmp->next;
     }
     /* create encrypted base 4 values */
-    cryptWords(img->code_h);
-    cryptWords(img->data_h);
     fclose(input);
     free(amFile);
     return isCorrect;

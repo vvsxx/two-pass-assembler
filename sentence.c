@@ -188,12 +188,3 @@ void addAddress(int **arr, int *size, int address) {
     (*arr)[newSize - 1] = address;
     *size = newSize;
 }
-
-/* encrypts binary value to encrypted base 4 value */
-void cryptWords(word *wrd) {
-    word *tmp = wrd;
-    while (tmp != NULL) {
-        binaryToEncrypted4(tmp->binary, tmp->secure4);
-        tmp = tmp->next;
-    }
-}

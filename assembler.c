@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
             if (isCorrect != SUCCESS)
                 printError(INCORRECT, 0);
         }
-        test(img);
+
 
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);

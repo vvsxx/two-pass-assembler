@@ -37,17 +37,16 @@ void *safeMalloc(size_t size) {
 
 /* converts a decimal number to binary and writes the resulting bits into the specified bit range of the "word" variable.  */
 void decToBin(int dec, int* word, int firstBit, int bitsToCode) {
+    int i;
     int lastBit = bitsToCode + firstBit - 1;
 
-    for (int i = firstBit; i <= lastBit; i++) {
+    for (i = firstBit; i <= lastBit; i++) {
         int bitValue = (dec >> (i - firstBit)) & 1;
         *word |= (bitValue << i);
     }
 }
 
-
-
-/* converts the binary value to a base 4 encrypted value and writes it to the "result" array */
+/* converts the binary value to a base 4 value */
 void binaryToEncrypted4(int binary, char *result) {
     int i, j, res = 6; /*  Initialize res to 6 (position in the result array) */
     int base4[4][2] = {
@@ -57,7 +56,7 @@ void binaryToEncrypted4(int binary, char *result) {
             {1, 1}
     }; /* Define base 4 bit pairs */
     char secure[] = {'*', '#', '%', '!'}; /* Define secure characters for base 4 encoding */
-    result[7] = '\0'; /* Null-terminate the result string */
+    memset(result, '\0', 8);
 
     for (i = 0; i < WORD_L; i += 2) { /* Process each pair of bits */
         int bit1 = (binary >> (i + 1)) & 1; /* Extract the higher bit of the pair */
@@ -127,33 +126,37 @@ int writeFiles(list *symbols, mem_img *img, char *filename) {
     return isCorrect;
 }
 
+
+/* Function to write word list to object file */
+void writeWords(word *list, FILE *objFile) {
+    char secure4[8];
+    word *tmp = list;
+    while (tmp != NULL) {
+        binaryToEncrypted4(tmp->binary, secure4);
+        fprintf(objFile, "%.4d %s\n", tmp->address, secure4);
+        tmp = tmp->next;
+    }
+}
+
 /* writes .obj file */
 int writeObjFile(mem_img *img, char *filename) {
     FILE *objFile;
     char *newName;
-    int IC;
-    word *tmp;
     newName = safeMalloc(strlen(filename) + 4); /* +.ob + \0 */
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");
     if (objFile == NULL) /* can't open object file */
         return INCORRECT;
-    IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
+    int IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
     fprintf(objFile, "%d %d\n", IC, img->DC);
-    tmp = img->code_h;
-    while (tmp != NULL) {
-        fprintf(objFile, "%.4d %s\n", tmp->address, tmp->secure4);
-        tmp = tmp->next;
-    }
-    tmp = img->data_h;
-    while (tmp != NULL) {
-        fprintf(objFile, "%.4d %s\n", tmp->address, tmp->secure4);
-        tmp = tmp->next;
-    }
+    writeWords(img->code_h, objFile);
+    writeWords(img->data_h, objFile);
     free(newName);
-    return  SUCCESS;
+    fclose(objFile);
+    return SUCCESS;
 }
+
 
 /* write .ent & .ext file */
 int createEntFile(list *labels, char *fileName) {
@@ -208,7 +211,7 @@ int createEntFile(list *labels, char *fileName) {
 int syntaxCheck(char *line, op_table *opcodes) {
     int opcode, i;
     int errorCode = SUCCESS;
-    char *p, *token, *operator = NULL, *label = NULL, *operands = NULL;
+    char *p, *token, *operator = NULL, *operands = NULL;
     int bufferSize = strlen(line) + 1;
     char *buffer = safeMalloc(bufferSize * sizeof (char));
     SentenceType type;
