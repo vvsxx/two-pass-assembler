@@ -14,8 +14,6 @@
  */
 
 static char *filename; /* contains current filename */
-
-
 /*
  * The main function of the two-pass assembler program.
  * It processes command line arguments, initializes data structures,

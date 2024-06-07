@@ -14,7 +14,6 @@ typedef enum {
     COMMENT,
     EMPTY,
     DEFINE,
-    DIRECTIVE,
     ENTRY,
     EXTERN,
     DATA,

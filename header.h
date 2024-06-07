@@ -45,7 +45,7 @@
 #define ARE_EXTERNAL 1
 
 
-/* general functions */
+/* functions prototypes */
 FILE * openFile(char *fileName, char *mode);
 void *safeMalloc(size_t size);
 int preProcessor(char *filename, op_table *opcodes);
