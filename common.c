@@ -49,25 +49,24 @@ void decToBin(int dec, int* word, int firstBit, int bitsToCode) {
 
 /* converts the binary value to a base 4 encrypted value and writes it to the "result" array */
 void binaryToEncrypted4(int binary, char *result) {
-    int i, j, res = 6;
+    int i, j, res = 6; /*  Initialize res to 6 (position in the result array) */
     int base4[4][2] = {
             {0, 0},
             {0, 1},
             {1, 0},
             {1, 1}
-    };
+    }; /* Define base 4 bit pairs */
+    char secure[] = {'*', '#', '%', '!'}; /* Define secure characters for base 4 encoding */
+    result[7] = '\0'; /* Null-terminate the result string */
 
-    char secure[] = {'*', '#', '%', '!'};
+    for (i = 0; i < WORD_L; i += 2) { /* Process each pair of bits */
+        int bit1 = (binary >> (i + 1)) & 1; /* Extract the higher bit of the pair */
+        int bit0 = (binary >> i) & 1;       /* Extract the lower bit of the pair */
 
-    result[7] = '\0'; // Завершающий нуль-символ для строки
-    for (i = 0; i < WORD_L; i += 2) {
-        int bit1 = (binary >> (i + 1)) & 1; // Получаем старший бит пары
-        int bit0 = (binary >> i) & 1;       // Получаем младший бит пары
-
-        for (j = 0; j < 4; ++j) {
+        for (j = 0; j < 4; ++j) { /* Find the matching base 4 pair */
             if (base4[j][0] == bit1 && base4[j][1] == bit0) {
-                result[res] = secure[j];
-                res--;
+                result[res] = secure[j]; /*  Assign the corresponding secure character */
+                res--; /* Move to the next position in the result array */
                 break;
             }
         }
