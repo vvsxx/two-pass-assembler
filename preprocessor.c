@@ -1,6 +1,7 @@
 #include "header.h"
 
 /* functions accessible only from this file */
+char* removeSpaces(char *line);
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h);
 macros_list *buildTable(FILE *input, op_table *opcodes);
 static int isCorrect; /* accessible only from this file, uses to detect logical problems in multiple functions */
@@ -59,13 +60,14 @@ int preProcessor(char *filename, op_table *opcodes) {
 macros_list *buildTable(FILE *input, op_table *opcodes) {
     macros_list *macros = NULL, *macros_h = NULL;
     char line[LINE_LENGTH];
-    char buffer[LINE_LENGTH];
+    char *tmp = NULL, *buffer;
     char *token;
     int i, c, lineNum = 0, isMacro = 0;
-    while (fgets(line, LINE_LENGTH-1, input) != NULL) {
+    buffer = safeMalloc((LINE_LENGTH + 1) * sizeof(char));
+    while (fgets(line, LINE_LENGTH, input) != NULL) {
         lineNum++;
         /* if line is longer than LINE_LENGTH characters */
-        if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n') {
+        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n') {
             printError(TOO_LONG_LINE, lineNum); /* print alert */
             while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
         }
@@ -101,14 +103,18 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
             i--;
         } else if (isMacro && strcmp(token, "endmcr") != 0) { /* inside macro declaration */
             macros->data[i] = safeMalloc((LINE_LENGTH + 1) * sizeof(char));
-            strcpy(macros->data[i], buffer);
+            tmp = removeSpaces(buffer);
+            strcpy(macros->data[i], tmp);
+            free(tmp);
         } else if (strcmp(token, "endmcr") == 0) { /* end of macro declaration found */
             isMacro = 0;
             i = 0;
             continue;
         }
         i++;
+
     }
+    free(buffer);
     return macros_h;
 }
 
@@ -116,23 +122,28 @@ macros_list *buildTable(FILE *input, op_table *opcodes) {
 void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
     char line[LINE_LENGTH], buffer[LINE_LENGTH], *token; /* line processing */
     char *data;
+    char *formatedLine = NULL;
     macros_list *macros = NULL;
     int i, c, macroDec = 0;
-    while (fgets(line, sizeof(line), inputFile) != NULL) {
+    SentenceType sentence;
+    while (fgets(line, LINE_LENGTH, inputFile) != NULL) {
         /* if line is longer than LINE_LENGTH characters */
-        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n') {
-            /* skip extra characters */
-            while ((c = fgetc(inputFile)) != '\n' && c != EOF);
-        }
+        if (strlen(line) == LINE_LENGTH-1 && line[LINE_LENGTH - 1] != '\n')
+            while ((c = fgetc(inputFile)) != '\n' && c != EOF); /* skip extra characters */
+        formatedLine = removeSpaces(line);
+        strcpy(line, formatedLine);
         line[strcspn(line, "\n")] = '\0';
         strcpy(buffer, line);
         token = strtok(line, " \t");
-        if (token == NULL) /* empty line case */
+        if (token == NULL || token[0] == ';') { /* empty line or comment case */
+            free(formatedLine);
             continue;
+        }
         if (strcmp(token, "mcr") == 0)
             macroDec = 1;
         if (strcmp(token, "endmcr") == 0) {
             macroDec = 0;
+            free(formatedLine);
             continue;
         }
         if ((macros = getMacroByName(macros_h, token)) != NULL) { /* marco name found */
@@ -145,5 +156,23 @@ void writeFile(FILE *inputFile, FILE *outputFile, macros_list *macros_h) {
             }
         } else if (!macroDec)
             fprintf(outputFile, "%s\n", buffer);
+
+        free(formatedLine);
     }
+}
+
+
+char* removeSpaces(char *line){
+    char *token = NULL;
+    char *p = line;
+    char *newLine = safeMalloc(LINE_LENGTH);
+    newLine[0] = '\0';
+    while ((token = strtok(p, ",")) != NULL && (strcmp(newLine, token) != 0)){
+        p = NULL;
+        token = deleteWhiteSpaces(token);
+        if (strlen(newLine) > 0)
+            strcat(newLine,",");
+        strcat(newLine,token);
+    }
+    return newLine;
 }

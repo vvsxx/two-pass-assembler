@@ -2,7 +2,7 @@
 
 /* functions and variables accessible only from this file */
 list *processLabel (SentenceType  type, int *DC, int *IC, char *labelName, char *token, list *labels_last, list *head, op_table *opcodes, int lineNum);
-int stringDefinition(char *token);
+int stringDirective(char *token);
 int processInstruction(char *token, op_table *opcodes, int opcode, int lineNum);
 void processDirective(SentenceType type, int *DC, char *token, int lineNum);
 static int isCorrect; /* accessible only from this file, uses to detect logical problems in multiple functions */
@@ -44,8 +44,9 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
         if ((p = strchr(line, ';')) != NULL) /* if comment found */
             p[0] ='\0'; /* ignore comments */
         res = SUCCESS;
-        token = deleteWhiteSpaces(line); /* used to check line correctness */
-        res = syntaxCheck(token, opcodes);
+        if (line[strlen(line) - 1] == '\n')
+            line[strlen(line) - 1] = '\0';
+        res = syntaxCheck(line, opcodes);
         if (res != SUCCESS) {
             isCorrect = INCORRECT;
             printError(res, lineNum);
@@ -127,7 +128,7 @@ int firstPass(char *fileName, list  *symbols, op_table *opcodes, int memSize){
  * Param:  token: Pointer to the string literal token.
  * Returns: Length of the string literal if it is valid, otherwise returns an error code.
  */
-int stringDefinition(char *token){
+int stringDirective(char *token){
     int DC = 1;
     if (token[0] != '\"'){
         return ILLEGAL_STRING_DATA;
@@ -266,7 +267,7 @@ void processDirective(SentenceType type, int *DC, char *token, int lineNum){
     if (type == STRING) {
         token = &token[strlen(token)+1];
         token = deleteWhiteSpaces(token);
-        res = stringDefinition(token);
+        res = stringDirective(token);
         if (res > 0) {
             (*DC) += res;
         } else {

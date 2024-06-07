@@ -14,4 +14,5 @@ add_executable(assembler assembler.c
         typedef.h
         sentence.c
         test.c
+        static_data.c
 )

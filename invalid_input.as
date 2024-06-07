@@ -6,7 +6,7 @@ KINITIALVALUE: sub  r4   ,     r3
 
 MAIN:   mov  r3, LENGTH
 
-LOOP:   jmp L1
+LOOP:   jmp L1, fhj
 
     mcr M1
 sub  r1,  r9

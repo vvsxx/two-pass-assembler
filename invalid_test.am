@@ -1,6 +1,6 @@
 ; this is comment
  ; this is comment
-    ; this is comment
+    ; this is comment    ; this is comment    ; this is comment    ; this is com
 qASD: mov r1,r2 ; this is comment
 wASD: mov r1 , r2; this is comment
 eASD: mov r1, r2

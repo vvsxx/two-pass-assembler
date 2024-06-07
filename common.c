@@ -222,6 +222,7 @@ int createEntFile(list *labels, char *fileName) {
     return isCorrect;
 }
 
+
 int syntaxCheck(char *line, op_table *opcodes) {
     int opcode, i;
     int errorCode = SUCCESS;
@@ -229,12 +230,14 @@ int syntaxCheck(char *line, op_table *opcodes) {
     int bufferSize = strlen(line) + 1;
     char *buffer = safeMalloc(bufferSize * sizeof (char));
     SentenceType type;
-    line = deleteWhiteSpaces(line);
-    p = line;
+
     if (line[0] == '\0') { /* skip empty line */
         free(buffer);
         return SUCCESS;
     }
+    if (line[strlen(line) - 1] == '\n')
+        line[strlen(line) - 1] = '\0';
+
     if (line[strlen(line)-1] == ',') {
         free(buffer);
         return ILLEGAL_COMMA;
@@ -242,14 +245,13 @@ int syntaxCheck(char *line, op_table *opcodes) {
     strcpy(buffer, line);
     token = strtok(buffer, " \t");
     type = getSentence(opcodes, token);
-    if (type == LABEL) {
-        label = safeMalloc((strlen(token)+1) * sizeof (char));
-        strcpy(label, token);
+    if (type == LABEL) { /* skip label */
         token = strtok(NULL, " \t");
         if (token != NULL){
             type = getSentence(opcodes, token);
-        } else
+        } else {
             errorCode = EMPTY_LABEL;
+        }
     }
     if (type == ENTRY || type == EXTERN || type == DEFINE || type == DATA || type == STRING) {
         errorCode =  SUCCESS; /* skip this case */
@@ -272,7 +274,7 @@ int syntaxCheck(char *line, op_table *opcodes) {
             if (token != NULL)
                 errorCode = EXTRANEOUS_TEXT;
         } else if (opcodes->operands_needed[opcode] == 1) { /* operator with 1 operand */
-            token = strtok(operands, " ,\t");
+            token = strtok(operands, ",");
             if (token == NULL)
                 errorCode = MISSING_OPERAND;
             if (operands[0] == ',')
@@ -313,8 +315,7 @@ int syntaxCheck(char *line, op_table *opcodes) {
     } else if (errorCode == SUCCESS){
         errorCode = UNKNOWN_OPERATOR;
     }
-    if (label != NULL)
-        free(label);
+
     if (operator != NULL)
         free(operator);
     if (operands != NULL)

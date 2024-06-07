@@ -39,8 +39,6 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
     if (input == NULL) /* can't open input file */
         return INCORRECT;
     while (fgets(line, LINE_LENGTH-1, input) != NULL) {
-        if (strlen(line) == LINE_LENGTH-2 && line[LINE_LENGTH - 2] != '\n')
-            while ((c = fgetc(input)) != '\n' && c != EOF); /* skip extra characters */
         if ((p = strchr(line, ';')) != NULL) /* if comment found */
             p[0] ='\0'; /* ignore comments */
         lineNum++;
