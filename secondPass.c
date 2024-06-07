@@ -123,7 +123,7 @@ int secondPass(char *fileName, mem_img *img, op_table *op_table, list *symbols){
 
 /* codes a words of sentence depending on the operand and addressing mode */
 void codeWords(char *op, mem_img *img, list *symbols, int pos){
-    int *word = &img->code->binary;
+    short *word = &img->code->binary;
     int addr_mode, ARE, value = 0;
     char *label, *index, *c;
     list *symbol = NULL;

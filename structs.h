@@ -30,7 +30,7 @@ struct opcode_table {
 };
 
 struct word {
-    int binary;              /* binary value */
+    short binary;              /* binary value */
     int address;              /* decimal address */
     struct word *next;        /* Pointer to the next word */
 };

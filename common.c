@@ -36,7 +36,7 @@ void *safeMalloc(size_t size) {
 
 
 /* converts a decimal number to binary and writes the resulting bits into the specified bit range of the "word" variable.  */
-void decToBin(int dec, int* word, int firstBit, int bitsToCode) {
+void decToBin(int dec, short* word, int firstBit, int bitsToCode) {
     int i;
     int lastBit = bitsToCode + firstBit - 1;
 
@@ -47,7 +47,7 @@ void decToBin(int dec, int* word, int firstBit, int bitsToCode) {
 }
 
 /* converts the binary value to a base 4 value */
-void binaryToEncrypted4(int binary, char *result) {
+void binaryToEncrypted4(short binary, char *result) {
     int i, j, res = 6; /*  Initialize res to 6 (position in the result array) */
     int base4[4][2] = {
             {0, 0},
@@ -142,13 +142,13 @@ void writeWords(word *list, FILE *objFile) {
 int writeObjFile(mem_img *img, char *filename) {
     FILE *objFile;
     char *newName;
+    int IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
     newName = safeMalloc(strlen(filename) + 4); /* +.ob + \0 */
     strcpy(newName, filename);
     strcat(newName, ".ob\0");
     objFile = openFile(newName, "w");
     if (objFile == NULL) /* can't open object file */
         return INCORRECT;
-    int IC = img->IC - FIRST_ADDRESS + 1; /* +1 because addressing starts from 0 */
     fprintf(objFile, "%d %d\n", IC, img->DC);
     writeWords(img->code_h, objFile);
     writeWords(img->data_h, objFile);
