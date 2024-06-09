@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
                 printError(INCORRECT, 0);
         }
 
-
         /* free memory & close opened files */
         freeList(symbols, SYMBOL_LIST);
         freeList(img->code_h, WORD_LIST);

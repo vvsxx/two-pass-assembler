@@ -59,20 +59,6 @@ int getOpValue (char *op, list *symbols, int *isCorrect){
             (*isCorrect) = UNDEFINED_SYMBOL;
             result = UNDEFINED_SYMBOL;
         }
-    } else if (type == ARRAY_INDEX){ /* array index  */
-        op = strchr(op, '[');
-        op[strlen(op)-1] = '\0'; /* delete square brackets */
-        op++;
-        if (isNumber(op))
-            result = atoi(op);
-        if (isalpha(op[0])) {
-            if ((symbol = getElementByName(symbols, op)) != NULL) {
-               result = symbol->value;
-            } else {
-                (*isCorrect) = UNDEFINED_SYMBOL;
-                result = UNDEFINED_SYMBOL;
-            }
-        }
     } else if (type == NUMBER_OP) {
         result = atoi(op);
     }

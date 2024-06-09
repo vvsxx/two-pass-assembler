@@ -1,6 +1,6 @@
 #include "header.h"
 
-void compareFilesLineByLine() {
+void test() {
     const char file1[] = "encrypted_test";
     const char file2[] = "valid_input.ob";
     FILE *fp1 = fopen(file1, "r");
