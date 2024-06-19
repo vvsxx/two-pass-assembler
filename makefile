@@ -1,7 +1,7 @@
 all: assembler
 
-assembler: assembler.o preprocessor.o firstPass.o secondPass.o sentence.o common.o list.o
-	gcc assembler.o preprocessor.o firstPass.o secondPass.o sentence.o common.o list.o -o assembler
+assembler: assembler.o preprocessor.o firstPass.o secondPass.o sentence.o common.o list.o static_data.o
+	gcc assembler.o preprocessor.o firstPass.o secondPass.o sentence.o common.o list.o static_data.o -o assembler
 
 assembler.o: assembler.c header.h structs.h typedef.h
 	gcc -Wall -ansi -pedantic -c assembler.c
@@ -23,6 +23,9 @@ common.o: common.c header.h structs.h typedef.h
 
 list.o: list.c header.h structs.h typedef.h
 	gcc -Wall -ansi -pedantic -c list.c
+
+static_data.o: static_data.c header.h structs.h typedef.h
+	gcc -Wall -ansi -pedantic -c static_data.c
 
 clean:
 	rm -rf *.o assembler

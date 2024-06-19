@@ -18,9 +18,7 @@ void freeSymList(struct list *p) {
         if (p->addresses != NULL) {
             free(p->addresses);
         }
-
         free(p);
-
         p = tmp;
     }
 }
