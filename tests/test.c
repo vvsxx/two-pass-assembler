@@ -1,7 +1,7 @@
-#include "header.h"
+#include "../header.h"
 
 void test() {
-    const char file1[] = "encrypted_test";
+    const char file1[] = "tests/valid_encrypted_result";
     const char file2[] = "valid_input.ob";
     FILE *fp1 = fopen(file1, "r");
     FILE *fp2 = fopen(file2, "r");
